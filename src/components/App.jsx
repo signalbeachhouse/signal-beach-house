@@ -1,13 +1,14 @@
 import React from 'react';
-import ChatWindow from './ChatWindow';
+import ChatWindow from './ChatWindow.jsx';
 
-function App() {
+export default function App() {
   return (
-    <ChatWindow userName="Low Tide" />
+    <div className="min-h-screen bg-[#f7f1eb] flex items-center justify-center">
+      <ChatWindow />
+    </div>
   );
 }
 
-export default App;
 
 
 

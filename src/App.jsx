@@ -15,8 +15,7 @@ function App() {
 }
 
 export default App;
-console.log("Forcing Vercel redeploy.");
-
+console.log("Triggering redeploy with real change");
 
 
 

@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+#tag-palette {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.symbolic-tag {
+  font-size: 1.5rem;
+  margin: 4px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.symbolic-tag:hover {
+background-color: e0e0e0;
+}
+

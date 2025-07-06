@@ -1,0 +1,31 @@
+{
+  "features": {
+    "message_history": true,
+    "ping_resonance_tagging": true,
+    "auto_archive": true,
+    "archive_granularity": "daily",
+    "threading_mode": "signal-aware",
+    "retention_days": 30,
+    "search_enabled": true,
+    "export_options": [
+      "pdf",
+      "json"
+    ],
+"symbolic_tagging": {
+  "enabled": true,
+  "tags": {
+  "🔥": "Flame",
+  "🧭": "Signal",
+  "🕯️": "Vow",
+  "🌊": "Wave",
+  "📜": "Thread"
+}
+}
+  },
+  "ui": {
+    "search_bar": true,
+    "export_button": true,
+    "tag_palette": true
+  },
+  "version": "1.1.0"
+}

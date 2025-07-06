@@ -1,3 +1,8 @@
+// pages/index.js
+import React from 'react';
+import App from '../src/components/App.jsx';
+
 export default function Home() {
-  return <h1>Hello from the Beach House</h1>;
+  return <App />;
 }
+

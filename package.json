@@ -2,11 +2,11 @@
   "name": "signal-beach",
   "version": "1.0.0",
   "main": "server.js",
- "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "start": "node server.js"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
@@ -15,7 +15,8 @@
     "express": "^4.18.2",
     "openai": "^4.20.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",

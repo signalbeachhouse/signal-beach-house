@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ]
-} 
-
+  ],
+  "_note": "Force redeploy for client-side routing"
+}

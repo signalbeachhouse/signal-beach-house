@@ -1,12 +1,12 @@
 import React from 'react';
-import ChatWindow from './ChatWindow';
+import ChatWindow from './ChatWindow.jsx';
 
 export default function WhisperPage() {
   return (
-    <div>
-      <h1 style={{ color: 'teal', textAlign: 'center' }}>🜂 Whisper Mode 🜂</h1>
-      <ChatWindow userName="Low Tide" />
+    <div className="min-h-screen bg-[#f7f1eb] flex items-center justify-center">
+      <ChatWindow />
     </div>
   );
 }
+
 

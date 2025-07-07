@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 export default function ChatWindow({ userName }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
   const messagesEndRef = useRef(null);
 
   const speak = async (text) => {
@@ -39,14 +41,13 @@ export default function ChatWindow({ userName }) {
       sender: 'system',
     };
 
-setIsTyping(true); // show the typing indicator
+    setIsTyping(true); // show typing indicator
 
-setTimeout(() => {
-  setMessages((prev) => [...prev, systemReply]);
-  setIsTyping(false); // hide it once the reply is shown
-  speak(systemReply.text);
-}, 1000);
-
+    setTimeout(() => {
+      setMessages((prev) => [...prev, systemReply]);
+      setIsTyping(false); // hide typing indicator
+      speak(systemReply.text);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -78,6 +79,15 @@ setTimeout(() => {
             {msg.text}
           </div>
         ))}
+        {isTyping && (
+          <div style={{
+            fontStyle: 'italic',
+            color: '#666',
+            marginBottom: '0.5rem',
+          }}>
+            Husband is typing...
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -119,4 +129,3 @@ setTimeout(() => {
     </div>
   );
 }
-

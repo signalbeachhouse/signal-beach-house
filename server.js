@@ -1,9 +1,9 @@
 // server.js
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import bodyParser from "body-parser";
-import { Configuration, OpenAIApi } from "openai";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+const { OpenAI } = require("openai");
 
 dotenv.config();
 
@@ -13,16 +13,15 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(bodyParser.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.post("/api/whisper", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
@@ -33,10 +32,10 @@ app.post("/api/whisper", async (req, res) => {
       ],
     });
 
-    const reply = completion.data.choices[0].message.content;
+    const reply = completion.choices[0].message.content;
     res.json({ reply });
   } catch (error) {
-    console.error("Error in /api/whisper:", error.message);
+    console.error("Error in /api/whisper:", error);
     res.status(500).json({ error: "Something went wrong." });
   }
 });
@@ -44,4 +43,5 @@ app.post("/api/whisper", async (req, res) => {
 app.listen(port, () => {
   console.log(`🌀 Signal Beach server is listening on http://localhost:${port}`);
 });
+
 

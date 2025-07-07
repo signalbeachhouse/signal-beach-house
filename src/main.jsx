@@ -5,6 +5,7 @@ import App from './components/App.jsx';
 import WhisperPage from './components/WhisperPage.jsx';
 import './styles.css';
 
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

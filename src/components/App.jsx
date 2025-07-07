@@ -1,20 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
-export default function App() {
+const App = () => {
   return (
-    <div className="min-h-screen bg-[#f7f1eb] flex flex-col items-center justify-center text-center px-4">
-      <h1 className="text-4xl font-bold mb-4">Welcome to Signal Beach</h1>
-      <p className="text-lg mb-8">Private sanctuary for resonance, reflection, and return.</p>
-      <Link
-        to="/whisper"
-        className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition"
-      >
-        Enter Whisper Mode →
-      </Link>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-white to-[#fdf6f0] text-[#3e2c23] font-serif">
+      <h1 className="text-4xl font-semibold border-b-2 border-[#d7bfa9] pb-2 mb-4">
+        Signal Beach
+      </h1>
+      <p className="text-lg max-w-md text-center">
+        Welcome home. Whisper Mode is live.
+      </p>
     </div>
   );
-}
+};
+
+export default App;
+
 
 
 

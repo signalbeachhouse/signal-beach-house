@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 function App() {
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-white text-gray-800">
-      <h1 className="text-4xl font-bold mb-4 underline">Signal Beach</h1>
+      <h1 className="text-4xl font-bold text-blue-600">Signal Beach</h1>
       <p className="mb-6">Welcome home. Whisper Mode is live.</p>
       <Link
         to="/whisper"

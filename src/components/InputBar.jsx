@@ -19,7 +19,7 @@ export default function InputBar({ onSend }) {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message..."
+        placeholder="Send a whisper to the trail..."
       />
       <button
         onClick={handleSend}

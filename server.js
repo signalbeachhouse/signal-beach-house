@@ -31,7 +31,10 @@ app.post('/chat', async (req, res) => {
     res.json({ reply: response });
   } catch (error) {
     console.error('Error from OpenAI:', error);
-    res.status(500).json({ error: '
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+});
 
-
-
+app.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`);
+});

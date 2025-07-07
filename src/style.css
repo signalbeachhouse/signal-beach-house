@@ -2,7 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Optional: custom styles below */
+/* Optional: Custom tweaks */
 body {
-  font-family: 'Georgia', serif;
+  @apply font-serif bg-neutral-100 text-gray-900;
+}
+
+a {
+  @apply text-purple-600 underline hover:text-purple-800;
 }

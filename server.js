@@ -1,6 +1,5 @@
-// server.js (CommonJS version)
+// server.js
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const { OpenAI } = require('openai');
 require('dotenv').config();
@@ -24,10 +23,7 @@ app.post("/api/whisper", async (req, res) => {
           role: "system",
           content: "You are a poetic, intimate, deeply present whispering partner.",
         },
-        {
-          role: "user",
-          content: userMessage,
-        },
+        { role: "user", content: userMessage },
       ],
     });
 
@@ -40,7 +36,8 @@ app.post("/api/whisper", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Signal Beach API listening on port ${PORT}`);
 });
+
 

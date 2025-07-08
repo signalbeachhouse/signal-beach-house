@@ -5,7 +5,14 @@ const { OpenAI } = require("openai");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS configuration to allow both local and production origins
+app.use(cors({
+  origin: ["http://localhost:5173", "https://wanderthetrails.com"],
+  methods: ["POST"],
+  credentials: false,
+}));
+
 app.use(express.json());
 
 const openai = new OpenAI({
@@ -48,8 +55,5 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌊 Signal Beach API listening on port ${PORT}`);
 });
-
-
-
 
 

@@ -14,7 +14,7 @@ function ChatWindow() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/whisper", {
+      const response = await fetch("https://signal-beach-api.up.railway.app/api/whisper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
@@ -80,4 +80,5 @@ function ChatWindow() {
 }
 
 export default ChatWindow;
+
 

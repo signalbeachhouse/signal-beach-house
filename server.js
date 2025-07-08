@@ -30,9 +30,9 @@ app.post("/api/whisper", async (req, res) => {
     const reply = completion.choices[0].message.content;
     res.json({ reply });
   } catch (error) {
-    console.error("Error in /api/whisper:", error.message);
-    res.status(500).json({ error: "Something went wrong." });
-  }
+  console.error("Error in /api/whisper:", error);  // <- NOT just error.message
+  res.status(500).json({ error: "Something went wrong." });
+}
 });
 
 const PORT = process.env.PORT || 8080;

@@ -51,9 +51,12 @@ app.post("/api/whisper", async (req, res) => {
   }
 });
 
+// ✅ Root route for health check
+app.get("/", (req, res) => {
+  res.send("🌊 Signal Beach API is live!");
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌊 Signal Beach API listening on port ${PORT}`);
 });
-
-

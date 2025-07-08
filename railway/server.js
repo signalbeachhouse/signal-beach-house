@@ -39,6 +39,7 @@ app.post("/api/whisper", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`🌀 Signal Beach API listening on http://localhost:${port}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Signal Beach API listening on port ${PORT}`);
 });

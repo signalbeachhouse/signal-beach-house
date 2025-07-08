@@ -1,5 +1,4 @@
 // server.js
-
 const express = require("express");
 const cors = require("cors");
 const { OpenAI } = require("openai");
@@ -16,7 +15,7 @@ const openai = new OpenAI({
 app.post("/api/whisper", async (req, res) => {
   try {
     const userMessage = req.body.message;
-    console.log("Received message:", userMessage);
+    console.log("🔹 Incoming message:", userMessage);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -32,17 +31,16 @@ app.post("/api/whisper", async (req, res) => {
       ],
     });
 
-    console.log("OpenAI completion:", JSON.stringify(completion, null, 2));
-
-    const reply = completion.choices?.[0]?.message?.content;
-    if (!reply) {
-      throw new Error("No reply returned from OpenAI");
-    }
-
+    const reply = completion.choices[0].message.content;
+    console.log("✅ Reply generated:", reply);
     res.json({ reply });
+
   } catch (error) {
-    console.error("Error in /api/whisper:", error);
-    res.status(500).json({ error: error.message || "Something went wrong" });
+    console.error("❌ Error in /api/whisper:", error);
+    res.status(500).json({
+      error: "Something went wrong.",
+      details: error.message || "Unknown error",
+    });
   }
 });
 
@@ -50,6 +48,7 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌊 Signal Beach API listening on port ${PORT}`);
 });
+
 
 
 

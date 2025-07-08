@@ -1,19 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const bodyParser = require('body-parser');
-const OpenAI = require('openai');
-
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
+const OpenAI = require("openai");
 
 const app = express();
-const port = process.env.PORT || 3001;
-
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 app.post("/api/whisper", async (req, res) => {
@@ -40,6 +34,7 @@ app.post("/api/whisper", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Signal Beach API listening on port ${PORT}`);
 });
+

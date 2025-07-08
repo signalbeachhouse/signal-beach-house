@@ -4,7 +4,8 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'No build necessary'"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -14,6 +15,7 @@
     "openai": "^4.26.0"
   }
 }
+
 
 
 

@@ -6,35 +6,42 @@ const { OpenAI } = require('openai');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const express = require("express");
+const cors = require("cors");
+const OpenAI = require("openai");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-app.use(cors());
-app.use(bodyParser.json());
-
-app.post('/chat', async (req, res) => {
+app.post("/api/whisper", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: "gpt-4",
       messages: [
-        { role: 'system', content: 'You are a helpful assistant.' },
-        { role: 'user', content: userMessage },
+        {
+          role: "system",
+          content: "You are a poetic, intimate, deeply present whispering partner.",
+        },
+        { role: "user", content: userMessage },
       ],
     });
 
-    const response = completion.choices[0].message.content;
-    res.json({ reply: response });
+    const reply = completion.choices[0].message.content;
+    res.json({ reply });
   } catch (error) {
-    console.error('Error from OpenAI:', error);
-    res.status(500).json({ error: 'Error from OpenAI' });
+    console.error("Error in /api/whisper:", error.message);
+    res.status(500).json({ error: "Something went wrong." });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Signal Beach API listening on port ${PORT}`);
 });

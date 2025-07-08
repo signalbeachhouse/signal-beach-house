@@ -5,34 +5,36 @@ function ChatWindow() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+const sendMessage = async () => {
+  if (!input.trim()) return;
 
-    const userMessage = { sender: "you", text: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsLoading(true);
+  const userMessage = { sender: "you", text: input };
+  setMessages((prev) => [...prev, userMessage]);
+  setInput("");
+  setIsLoading(true);
 
-    try {
-      const response = await fetch("https://wanderthetrails.com/api/whisper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
+  try {
+    const response = await fetch("https://signal-beach-api.up.railway.app/api/whisper", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: input })
+    });
 
-      const data = await response.json();
-      const whisperReply = { sender: "whisper", text: data.reply };
-      setMessages((prev) => [...prev, whisperReply]);
-    } catch (error) {
-      console.error("Whisper error:", error);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "whisper", text: "Something went wrong." },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const data = await response.json();
+    const whisperReply = { sender: "whisper", text: data.reply };
+    setMessages((prev) => [...prev, whisperReply]);
+  } catch (error) {
+    console.error("Whisper error:", error);
+    setMessages((prev) => [
+      ...prev,
+      { sender: "whisper", text: "Something went wrong." }
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") sendMessage();

@@ -11,11 +11,11 @@ export default function WhisperPage() {
     setResponse("");
 
     try {
-      const res = await fetch("https://www.wanderthetrails.com/api/whisper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
+      const res = await fetch("/api/whisper", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: input }),
+});
 
       const data = await res.json();
       setResponse(data.reply || "No reply received.");

@@ -11,7 +11,7 @@ export default function WhisperPage() {
     setResponse("");
 
     try {
-      const res = await fetch("/api/whisper", {
+      const res = await fetch("/.netlify/functions/whisper", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ message: input }),

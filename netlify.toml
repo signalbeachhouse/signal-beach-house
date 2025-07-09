@@ -1,0 +1,10 @@
+[build]
+  functions = "netlify/functions"
+  publish = "dist"
+
+[[redirects]]
+  from = "/api/whisper"
+  to = "/.netlify/functions/whisper"
+  status = 200
+
+

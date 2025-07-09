@@ -1,4 +1,11 @@
-// /netlify/functions/whisper.js
+// netlify/functions/whisper.js
+
+import { Configuration, OpenAIApi } from "openai";
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 export async function handler(event, context) {
   if (event.httpMethod !== "POST") {
@@ -12,7 +19,12 @@ export async function handler(event, context) {
     const body = JSON.parse(event.body);
     const userMessage = body.message;
 
-    const reply = `You said: ${userMessage}`;
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: userMessage }],
+    });
+
+    const reply = completion.data.choices[0].message.content;
 
     return {
       statusCode: 200,
@@ -29,7 +41,8 @@ export async function handler(event, context) {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
       },
-      body: JSON.stringify({ error: "Failed to process message." }),
+      body: JSON.stringify({ error: "Failed to process message.", details: err.message }),
     };
   }
 }
+

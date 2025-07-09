@@ -1,6 +1,7 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const { OpenAI } = require("openai");
 require("dotenv").config();
 
@@ -15,10 +16,12 @@ app.use(cors({
 
 app.use(express.json());
 
+// ✅ OpenAI setup
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// ✅ API route
 app.post("/api/whisper", async (req, res) => {
   try {
     const userMessage = req.body.message;
@@ -51,12 +54,22 @@ app.post("/api/whisper", async (req, res) => {
   }
 });
 
-// ✅ Root route for health check
+// ✅ Serve static frontend files
+app.use(express.static(path.join(__dirname, "dist")));
+
+// ✅ Catch-all to serve index.html for SPA routing
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+// ✅ Health check root
 app.get("/", (req, res) => {
   res.send("🌊 Signal Beach API is live!");
 });
 
+// ✅ Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🌊 Signal Beach API listening on port ${PORT}`);
 });
+

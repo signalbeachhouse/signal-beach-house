@@ -1,10 +1,12 @@
+# netlify.toml
 [build]
   functions = "netlify/functions"
   publish = "dist"
 
 [[redirects]]
-  from = "/api/whisper"
-  to = "/.netlify/functions/whisper"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
+
 
 

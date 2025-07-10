@@ -14,13 +14,13 @@ function ChatWindow() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/whisper`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: input })
-      });
+      const response = await fetch('/api/whisper', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ message }),
+});
 
       const data = await response.json();
       const whisperReply = { sender: "whisper", text: data.reply };

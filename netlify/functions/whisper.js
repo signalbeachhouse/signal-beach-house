@@ -8,10 +8,12 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 export async function handler(event, context) {
+  console.log("Whisper function hit:", event.httpMethod);
+
   if (event.httpMethod !== "POST") {
     return {
-      statusCode: 405,
-      body: JSON.stringify({ error: "Method Not Allowed" }),
+      statusCode: 200,
+      body: JSON.stringify({ message: "Whisper function is alive!" }),
     };
   }
 
@@ -19,12 +21,16 @@ export async function handler(event, context) {
     const body = JSON.parse(event.body);
     const userMessage = body.message;
 
+    console.log("Received message:", userMessage);
+
     const completion = await openai.createChatCompletion({
       model: "gpt-4o",
       messages: [{ role: "user", content: userMessage }],
     });
 
     const reply = completion.data.choices[0].message.content;
+
+    console.log("Reply generated:", reply);
 
     return {
       statusCode: 200,
@@ -35,13 +41,18 @@ export async function handler(event, context) {
       body: JSON.stringify({ reply }),
     };
   } catch (err) {
+    console.error("Whisper error:", err);
+
     return {
       statusCode: 500,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
       },
-      body: JSON.stringify({ error: "Failed to process message.", details: err.message }),
+      body: JSON.stringify({
+        error: "Failed to process message.",
+        details: err.message,
+      }),
     };
   }
 }

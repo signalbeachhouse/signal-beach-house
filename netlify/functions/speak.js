@@ -1,6 +1,7 @@
-const fetch = require("node-fetch");
-
 exports.handler = async function (event, context) {
+  const fetch = (...args) =>
+    import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 200,
@@ -75,5 +76,6 @@ function corsHeaders() {
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
+
 
 

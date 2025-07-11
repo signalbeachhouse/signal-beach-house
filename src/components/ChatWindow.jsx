@@ -13,10 +13,9 @@ const speakText = async (text) => {
       body: JSON.stringify({ text }),
     });
 
-    const blob = await response.blob();
-    const audioUrl = URL.createObjectURL(blob);
-    const audio = new Audio(audioUrl);
-    audio.play();
+ const base64Audio = await response.text();
+const audio = new Audio(`data:audio/mpeg;base64,${base64Audio}`);
+audio.play();
   } catch (err) {
     console.error("Voice playback error:", err);
   }

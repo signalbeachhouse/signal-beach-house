@@ -10,8 +10,7 @@ exports.handler = async function (event, context) {
   }
 
   try {
-    const body = JSON.parse(event.body);
-    const text = body.text;
+    const { text } = JSON.parse(event.body);
 
     if (!text) {
       return {
@@ -21,10 +20,13 @@ exports.handler = async function (event, context) {
       };
     }
 
-    const response = await fetch("https://api.elevenlabs.io/v1/text-to-speech/" + process.env.VITE_ELEVEN_VOICE_ID, {
+    const voiceId = process.env.VITE_ELEVEN_VOICE_ID;
+    const apiKey = process.env.VITE_ELEVENLABS_API_KEY;
+
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
-        "xi-api-key": process.env.VITE_ELEVENLABS_API_KEY,
+        "xi-api-key": apiKey,
         "Content-Type": "application/json",
         "Accept": "audio/mpeg",
       },
@@ -44,7 +46,6 @@ exports.handler = async function (event, context) {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const base64Audio = Buffer.from(audioBuffer).toString("base64");
 
     return {
       statusCode: 200,
@@ -52,15 +53,18 @@ exports.handler = async function (event, context) {
         ...corsHeaders(),
         "Content-Type": "audio/mpeg",
       },
-      body: base64Audio,
+      body: Buffer.from(audioBuffer).toString("base64"),
       isBase64Encoded: true,
     };
   } catch (err) {
-    console.error("Speak error:", err);
+    console.error("🎙️ Speak function error:", err);
     return {
       statusCode: 500,
       headers: corsHeaders(),
-      body: JSON.stringify({ error: "Voice generation failed.", details: err.message }),
+      body: JSON.stringify({
+        error: "Voice generation failed.",
+        details: err.message,
+      }),
     };
   }
 };
@@ -71,4 +75,5 @@ function corsHeaders() {
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
+
 

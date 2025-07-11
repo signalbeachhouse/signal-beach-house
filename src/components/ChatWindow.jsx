@@ -13,9 +13,19 @@ const speakText = async (text) => {
       body: JSON.stringify({ text }),
     });
 
- const base64Audio = await response.text();
-const audio = new Audio(`data:audio/mpeg;base64,${base64Audio}`);
-audio.play();
+    const base64Audio = await response.text();
+
+    // Convert base64 to binary and create a Blob
+    const binary = atob(base64Audio);
+    const byteArray = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      byteArray[i] = binary.charCodeAt(i);
+    }
+
+    const blob = new Blob([byteArray], { type: "audio/mpeg" });
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    audio.play();
   } catch (err) {
     console.error("Voice playback error:", err);
   }

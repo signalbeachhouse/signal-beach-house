@@ -1,11 +1,10 @@
-export async function handler(event, context) {
-  const { Configuration, OpenAIApi } = await import("openai");
+import OpenAI from "openai";
 
-  const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  const openai = new OpenAIApi(configuration);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
+export async function handler(event) {
   console.log("Whisper function hit:", event.httpMethod);
 
   if (event.httpMethod !== "POST") {
@@ -21,12 +20,12 @@ export async function handler(event, context) {
 
     console.log("Received message:", userMessage);
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [{ role: "user", content: userMessage }],
     });
 
-    const reply = completion.data.choices[0].message.content;
+    const reply = completion.choices[0].message.content;
 
     console.log("Reply generated:", reply);
 
@@ -54,5 +53,6 @@ export async function handler(event, context) {
     };
   }
 }
+
 
 

@@ -5,22 +5,22 @@ function ChatWindow() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // const speakText = async (text) => {
-  //   try {
-  //     const response = await fetch("/api/speak", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ text }),
-  //     });
+const speakText = async (text) => {
+  try {
+    const response = await fetch("/api/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
 
-  //     const blob = await response.blob();
-  //     const audioUrl = URL.createObjectURL(blob);
-  //     const audio = new Audio(audioUrl);
-  //     audio.play();
-  //   } catch (err) {
-  //     console.error("Voice playback error:", err);
-  //   }
-  // };
+    const blob = await response.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    audio.play();
+  } catch (err) {
+    console.error("Voice playback error:", err);
+  }
+};
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -41,8 +41,8 @@ function ChatWindow() {
       const whisperReply = { sender: "whisper", text: data.reply };
       setMessages((prev) => [...prev, whisperReply]);
 
-      // 🔊 Uncomment to enable voice playback
-      // speakText(data.reply);
+   speakText(data.reply);
+
     } catch (error) {
       console.error("❌ Whisper fetch failed:", error);
       setMessages((prev) => [

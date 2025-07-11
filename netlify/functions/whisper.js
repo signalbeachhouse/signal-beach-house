@@ -1,13 +1,11 @@
-// netlify/functions/whisper.js
-
-import { Configuration, OpenAIApi } from "openai";
-
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
 export async function handler(event, context) {
+  const { Configuration, OpenAIApi } = await import("openai");
+
+  const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+
   console.log("Whisper function hit:", event.httpMethod);
 
   if (event.httpMethod !== "POST") {
@@ -56,4 +54,5 @@ export async function handler(event, context) {
     };
   }
 }
+
 

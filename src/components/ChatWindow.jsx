@@ -99,5 +99,3 @@ audio.play();
 }
 
 export default ChatWindow;
-
-

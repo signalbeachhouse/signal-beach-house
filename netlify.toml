@@ -1,13 +1,14 @@
-# netlify.toml
-
 [build]
   functions = "netlify/functions"
-  publish = "dist"
-
-[functions]
-  node_bundler = "esbuild"
+  publish = "dist" # or "build" or "public" depending on your framework setup
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/speak"
+  to = "/.netlify/functions/speak"
   status = 200
+
+[[redirects]]
+  from = "/api/whisper"
+  to = "/.netlify/functions/whisper"
+  status = 200
+

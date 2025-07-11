@@ -5,22 +5,22 @@ function ChatWindow() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const speakText = async (text) => {
-    try {
-      const response = await fetch("/api/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+  // const speakText = async (text) => {
+  //   try {
+  //     const response = await fetch("/api/speak", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ text }),
+  //     });
 
-      const blob = await response.blob();
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-    } catch (err) {
-      console.error("Voice playback error:", err);
-    }
-  };
+  //     const blob = await response.blob();
+  //     const audioUrl = URL.createObjectURL(blob);
+  //     const audio = new Audio(audioUrl);
+  //     audio.play();
+  //   } catch (err) {
+  //     console.error("Voice playback error:", err);
+  //   }
+  // };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -33,9 +33,7 @@ function ChatWindow() {
     try {
       const response = await fetch("/api/whisper", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
 
@@ -43,8 +41,8 @@ function ChatWindow() {
       const whisperReply = { sender: "whisper", text: data.reply };
       setMessages((prev) => [...prev, whisperReply]);
 
-      // 🔊 Say the reply aloud
-      speakText(data.reply);
+      // 🔊 Uncomment to enable voice playback
+      // speakText(data.reply);
     } catch (error) {
       console.error("❌ Whisper fetch failed:", error);
       setMessages((prev) => [
@@ -85,7 +83,7 @@ function ChatWindow() {
         <input
           type="text"
           className="flex-1 p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300"
-          placeholder="Type your message..."
+          placeholder="What’s on your mind?"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}

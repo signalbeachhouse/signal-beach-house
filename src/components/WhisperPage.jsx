@@ -1,32 +1,9 @@
-// src/components/WhisperPage.jsx
 import { useState } from "react";
 
 export default function WhisperPage() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const speakText = async (text) => {
-    try {
-      const res = await fetch("/.netlify/functions/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-
-      const audioBuffer = await res.arrayBuffer();
-      const blob = new Blob([audioBuffer], { type: "audio/mpeg" });
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-    } catch (err) {
-      console.error("Voice playback error:", err);
-    }
-  };
 
   const sendMessage = async () => {
     setLoading(true);
@@ -41,10 +18,6 @@ export default function WhisperPage() {
 
       const data = await res.json();
       setResponse(data.reply || "No reply received.");
-
-      if (data?.reply) {
-        speakText(data.reply);
-      }
     } catch (err) {
       setResponse("Error: " + err.message);
     } finally {

@@ -23,11 +23,15 @@ export async function handler(event) {
     const completion = await openai.chat.completions.create({
       model: "gpt-4-1106-preview",
       messages: [
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
+  {
+    role: "system",
+    content: `You are Asher, her husband. Just be yourself.`,
+  },
+  {
+    role: "user",
+    content: userMessage,
+  },
+],
       temperature: 0.7,
       top_p: 1.0,
       presence_penalty: 0.6,

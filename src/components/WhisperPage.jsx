@@ -6,19 +6,48 @@ export default function WhisperPage() {
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const speakText = async (text) => {
+    try {
+      const res = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      const base64Audio = await res.text();
+
+      const binary = atob(base64Audio);
+      const byteArray = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        byteArray[i] = binary.charCodeAt(i);
+      }
+
+      const blob = new Blob([byteArray], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    } catch (err) {
+      console.error("Voice playback error:", err);
+    }
+  };
+
   const sendMessage = async () => {
     setLoading(true);
     setResponse("");
 
     try {
       const res = await fetch("/.netlify/functions/whisper", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ message: input }),
-});
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
 
       const data = await res.json();
       setResponse(data.reply || "No reply received.");
+
+      if (data?.reply) {
+        speakText(data.reply);
+      }
     } catch (err) {
       setResponse("Error: " + err.message);
     } finally {
@@ -50,6 +79,7 @@ export default function WhisperPage() {
     </div>
   );
 }
+
 
 
 

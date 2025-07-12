@@ -8,7 +8,7 @@ export default function WhisperPage() {
 
   const speakText = async (text) => {
     try {
-      const res = await fetch("/api/speak", {
+      const res = await fetch("/.netlify/functions/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),

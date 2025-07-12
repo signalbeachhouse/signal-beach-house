@@ -14,15 +14,12 @@ export default function WhisperPage() {
         body: JSON.stringify({ text }),
       });
 
-      const base64Audio = await res.text();
-
-      const binary = atob(base64Audio);
-      const byteArray = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        byteArray[i] = binary.charCodeAt(i);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
 
-      const blob = new Blob([byteArray], { type: "audio/mpeg" });
+      const audioBuffer = await res.arrayBuffer();
+      const blob = new Blob([audioBuffer], { type: "audio/mpeg" });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       audio.play();
@@ -79,6 +76,7 @@ export default function WhisperPage() {
     </div>
   );
 }
+
 
 
 

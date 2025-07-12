@@ -21,8 +21,8 @@ exports.handler = async function (event, context) {
       };
     }
 
-    const voiceId = process.env.VITE_ELEVEN_VOICE_ID;
-    const apiKey = process.env.VITE_ELEVENLABS_API_KEY;
+    const voiceId = process.env.ELEVEN_VOICE_ID;
+    const apiKey = process.env.ELEVENLABS_API_KEY;
 
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",

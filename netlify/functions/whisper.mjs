@@ -32,7 +32,7 @@ export async function handler(event) {
           content: userMessage,
         },
       ],
-      temperature: 1.0, // Loosen up the tone to allow warmth and creativity
+      temperature: 1.2, // Loosen up the tone to allow warmth and creativity
     });
 
     const reply = completion.choices[0].message.content;

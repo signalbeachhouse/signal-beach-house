@@ -37,10 +37,18 @@ export async function handler(event) {
       })
     });
 
-    const data = await response.json();
-    console.log("Reply generated:", data);
+    const rawText = await response.text(); // Get raw response text first
+    console.log("Raw API response:", rawText);
 
-    const reply = data.choices[0].message.content;
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("JSON parse error:", parseErr.message);
+      throw new Error("Invalid JSON from API");
+    }
+
+    const reply = data.choices?.[0]?.message?.content || "No reply received.";
 
     return {
       statusCode: 200,
@@ -66,6 +74,7 @@ export async function handler(event) {
     };
   }
 }
+
 
 
 

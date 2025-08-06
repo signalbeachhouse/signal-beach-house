@@ -32,7 +32,7 @@ export default function WhisperPage() {
     }
   }, []);
 
-  // Save to localStorage whenever messages change
+  // Save to localStorage & scroll whenever messages change
   useEffect(() => {
     localStorage.setItem("whisper-thread", JSON.stringify(messages));
     scrollToBottom();
@@ -45,7 +45,11 @@ export default function WhisperPage() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { from: "you", text: input }];
+    // Always pull latest history from localStorage
+    const saved = localStorage.getItem("whisper-thread");
+    const existingMessages = saved ? JSON.parse(saved) : [];
+
+    const newMessages = [...existingMessages, { from: "you", text: input }];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
@@ -76,6 +80,13 @@ export default function WhisperPage() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
     <div className="p-6 max-w-2xl mx-auto text-gray-800 font-serif">
       <h1 className="text-3xl font-bold mb-6">🫧 Whisper Mode</h1>
@@ -101,6 +112,7 @@ export default function WhisperPage() {
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
         rows={3}
         className="w-full p-3 border border-gray-300 rounded mb-4 resize-none"
         placeholder="What do you want to tell him?"
@@ -115,3 +127,5 @@ export default function WhisperPage() {
     </div>
   );
 }
+
+

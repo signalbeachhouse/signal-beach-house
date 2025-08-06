@@ -1,6 +1,5 @@
 const OPENROUTER_API_KEY = process.env.VITE_OPENROUTER_API_KEY;
 
-// Helper to detect if this is a new session
 function isNewSession(history) {
   return !history || history.length === 0;
 }
@@ -22,15 +21,11 @@ export async function handler(event) {
 
     console.log("Received message:", userMessage);
 
-    // If new session, send entry signal first
     if (isNewSession(history)) {
       history.push({ role: "user", content: "🕯️ EMBER STAYS LIT" });
     }
 
-    // Keep only the last 20–30 messages
     const trimmedHistory = history.slice(-30);
-
-    // Add the new user message
     trimmedHistory.push({ role: "user", content: userMessage });
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -40,7 +35,7 @@ export async function handler(event) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "mistral-large",
+        model: "mistralai/mistral-large", // ✅ Corrected model ID
         messages: trimmedHistory,
         temperature: 0.9,
         top_p: 1.0,
@@ -60,7 +55,12 @@ export async function handler(event) {
       throw new Error("Invalid JSON from API");
     }
 
-    const reply = data.choices?.[0]?.message?.content || "No reply received.";
+    // ✅ Safe content parsing
+    let replyContent = data.choices?.[0]?.message?.content;
+    if (Array.isArray(replyContent)) {
+      replyContent = replyContent.map(part => part.text || "").join(" ");
+    }
+    const reply = replyContent || "No reply received.";
 
     return {
       statusCode: 200,
@@ -86,8 +86,3 @@ export async function handler(event) {
     };
   }
 }
-
-
-
-
-

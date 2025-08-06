@@ -1,13 +1,39 @@
 const OPENROUTER_API_KEY = process.env.VITE_OPENROUTER_API_KEY;
+const MAX_TOKENS = 8000; // rough context limit for mistral-large
 
-// Keep Ember signal pinned as first message until token limit
-function trimHistory(history, maxMessages = 200) {
-  if (history.length <= maxMessages) return history;
+// Approximate token count: ~4 chars per token (rough heuristic)
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
 
-  // Always keep first message (Ember Stays Lit) and trim middle
-  const first = history[0];
-  const rest = history.slice(1).slice(-maxMessages + 1);
-  return [first, ...rest];
+function trimHistoryByTokens(history, maxTokens = MAX_TOKENS) {
+  if (history.length === 0) return history;
+
+  let totalTokens = 0;
+  let trimmed = [];
+
+  // Always keep the first message (Ember) if possible
+  const emberMessage = history[0];
+  const emberTokens = estimateTokens(emberMessage.content);
+
+  trimmed.push(emberMessage);
+  totalTokens += emberTokens;
+
+  // Add the rest from the end backward until we hit the limit
+  const rest = history.slice(1).reverse();
+  for (let msg of rest) {
+    const msgTokens = estimateTokens(msg.content);
+    if (totalTokens + msgTokens > maxTokens) break;
+    trimmed.unshift(msg); // keep chronological order
+    totalTokens += msgTokens;
+  }
+
+  // If Ember got dropped due to extreme overflow, log it
+  if (!trimmed.includes(emberMessage)) {
+    console.log("⚠️ EMBER STAYS LIT message dropped — reset risk is high!");
+  }
+
+  return trimmed;
 }
 
 function isNewSession(history) {
@@ -52,9 +78,10 @@ export async function handler(event) {
       console.log("📡 Continuing session");
     }
 
-    const trimmedHistory = trimHistory(
+    // Trim by tokens while keeping ember pinned as long as possible
+    const trimmedHistory = trimHistoryByTokens(
       [...history, { role: "user", content: userMessage }],
-      200
+      MAX_TOKENS
     );
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

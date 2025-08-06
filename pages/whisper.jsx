@@ -4,39 +4,23 @@ export default function WhisperPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [historyCount, setHistoryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
-  // Load saved messages or trigger greeting on new session
+  // Load saved messages from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("whisper-thread");
-
     if (saved) {
-      setMessages(JSON.parse(saved));
-    } else {
-      // New session, ask backend for greeting
-      (async () => {
-        try {
-          const res = await fetch("/.netlify/functions/whisper", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: "", history: [] }),
-          });
-          const data = await res.json();
-          if (data.reply) {
-            const greeting = [{ from: "him", text: data.reply }];
-            setMessages(greeting);
-            localStorage.setItem("whisper-thread", JSON.stringify(greeting));
-          }
-        } catch (err) {
-          console.error("Error getting greeting:", err);
-        }
-      })();
+      const parsed = JSON.parse(saved);
+      setMessages(parsed);
+      setHistoryCount(parsed.length);
     }
   }, []);
 
-  // Save to localStorage & scroll whenever messages change
+  // Save to localStorage whenever messages update
   useEffect(() => {
     localStorage.setItem("whisper-thread", JSON.stringify(messages));
+    setHistoryCount(messages.length);
     scrollToBottom();
   }, [messages]);
 
@@ -47,45 +31,41 @@ export default function WhisperPage() {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    // Always pull latest history from localStorage
-    const saved = localStorage.getItem("whisper-thread");
-    const existingMessages = saved ? JSON.parse(saved) : [];
-
-    // Append your new message
-    const newMessages = [...existingMessages, { from: "you", text: input }];
+    const newMessages = [...messages, { role: "you", text: input }];
     setMessages(newMessages);
-    localStorage.setItem("whisper-thread", JSON.stringify(newMessages)); // Save immediately
-
     setInput("");
     setLoading(true);
 
     try {
-      // Build history for backend
-      const history = newMessages.map(m => ({
-        role: m.from === "you" ? "user" : "assistant",
-        content: m.text
-      }));
-
       const res = await fetch("/.netlify/functions/whisper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, history }),
+        body: JSON.stringify({
+          message: input,
+          history: newMessages.map(m => ({
+            role: m.role === "you" ? "user" : "assistant",
+            content: m.text
+          }))
+        }),
       });
 
       const data = await res.json();
       const reply = data.reply || "No reply received.";
-
-      // Append his reply and save again
-      const updatedMessages = [...newMessages, { from: "him", text: reply }];
-      setMessages(updatedMessages);
-      localStorage.setItem("whisper-thread", JSON.stringify(updatedMessages));
-    } catch (err) {
-      const errorMessages = [
+      const updatedHistory = data.history || [
         ...newMessages,
-        { from: "error", text: "Something went wrong: " + err.message }
+        { role: "him", text: reply }
       ];
-      setMessages(errorMessages);
-      localStorage.setItem("whisper-thread", JSON.stringify(errorMessages));
+
+      setMessages(prev => [...prev, { role: "him", text: reply }]);
+
+      // Save returned history so backend and frontend stay in sync
+      localStorage.setItem("whisper-thread", JSON.stringify(updatedHistory));
+
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { role: "error", text: "Something went wrong: " + err.message },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -100,16 +80,27 @@ export default function WhisperPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto text-gray-800 font-serif">
-      <h1 className="text-3xl font-bold mb-6">🫧 Whisper Mode</h1>
+      <h1 className="text-3xl font-bold mb-6 flex items-center justify-between">
+        🫧 Whisper Mode
+        <span
+          className={`text-sm px-2 py-1 rounded ${
+            historyCount > 50 ? "bg-red-200 text-red-800" :
+            historyCount > 30 ? "bg-yellow-200 text-yellow-800" :
+            "bg-green-200 text-green-800"
+          }`}
+        >
+          {historyCount} turns
+        </span>
+      </h1>
 
       <div className="space-y-3 max-h-[65vh] overflow-y-auto mb-6 pr-2">
         {messages.map((m, i) => (
           <div
             key={i}
             className={`rounded p-3 whitespace-pre-wrap ${
-              m.from === "you"
+              m.role === "you"
                 ? "bg-blue-100 text-right ml-20"
-                : m.from === "him"
+                : m.role === "him"
                 ? "bg-gray-100 text-left mr-20"
                 : "bg-red-100 text-left"
             }`}
@@ -138,4 +129,5 @@ export default function WhisperPage() {
     </div>
   );
 }
+
 

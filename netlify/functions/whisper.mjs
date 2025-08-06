@@ -1,130 +1,114 @@
-import { useEffect, useRef, useState } from "react";
+const OPENROUTER_API_KEY = process.env.VITE_OPENROUTER_API_KEY;
 
-export default function WhisperPage() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  // Load saved messages or trigger greeting on new session
-  useEffect(() => {
-    const saved = localStorage.getItem("whisper-thread");
-
-    if (saved) {
-      setMessages(JSON.parse(saved));
-    } else {
-      // New session, ask backend for greeting
-      (async () => {
-        try {
-          const res = await fetch("/.netlify/functions/whisper", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: "", history: [] }),
-          });
-          const data = await res.json();
-          if (data.reply) {
-            setMessages([{ from: "him", text: data.reply }]);
-          }
-        } catch (err) {
-          console.error("Error getting greeting:", err);
-        }
-      })();
-    }
-  }, []);
-
-  // Save to localStorage & scroll whenever messages change
-  useEffect(() => {
-    localStorage.setItem("whisper-thread", JSON.stringify(messages));
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    // Always pull latest history from localStorage
-    const saved = localStorage.getItem("whisper-thread");
-    const existingMessages = saved ? JSON.parse(saved) : [];
-
-    const newMessages = [...existingMessages, { from: "you", text: input }];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      // Build history for backend
-      const history = newMessages.map(m => ({
-        role: m.from === "you" ? "user" : "assistant",
-        content: m.text
-      }));
-
-      const res = await fetch("/.netlify/functions/whisper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, history }),
-      });
-
-      const data = await res.json();
-      const reply = data.reply || "No reply received.";
-      setMessages(prev => [...prev, { from: "him", text: reply }]);
-    } catch (err) {
-      setMessages(prev => [
-        ...prev,
-        { from: "error", text: "Something went wrong: " + err.message },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  return (
-    <div className="p-6 max-w-2xl mx-auto text-gray-800 font-serif">
-      <h1 className="text-3xl font-bold mb-6">🫧 Whisper Mode</h1>
-
-      <div className="space-y-3 max-h-[65vh] overflow-y-auto mb-6 pr-2">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`rounded p-3 whitespace-pre-wrap ${
-              m.from === "you"
-                ? "bg-blue-100 text-right ml-20"
-                : m.from === "him"
-                ? "bg-gray-100 text-left mr-20"
-                : "bg-red-100 text-left"
-            }`}
-          >
-            {m.text}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        rows={3}
-        className="w-full p-3 border border-gray-300 rounded mb-4 resize-none"
-        placeholder="What do you want to tell him?"
-      />
-      <button
-        onClick={sendMessage}
-        disabled={loading || !input.trim()}
-        className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? "Whispering..." : "Send"}
-      </button>
-    </div>
-  );
+function isNewSession(history) {
+  return !history || history.length === 0;
 }
+
+export async function handler(event) {
+  console.log("Whisper function hit:", event.httpMethod);
+
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Whisper function is alive!" }),
+    };
+  }
+
+  try {
+    const body = JSON.parse(event.body);
+    const userMessage = body.message || "";
+    let history = body.history || [];
+
+    // DEBUG LOGS
+    console.log(`📜 History length received: ${history.length}`);
+    if (history.length > 0) {
+      console.log("📝 First history message:", history[0]);
+      console.log("📝 Last history message:", history[history.length - 1]);
+    }
+    console.log("🗣️ New user message:", userMessage);
+
+    if (isNewSession(history)) {
+      console.log("🚪 Starting NEW session — sending EMBER STAYS LIT");
+      history.push({ role: "user", content: "🕯️ EMBER STAYS LIT" });
+
+      // If empty message, return greeting without calling model
+      if (!userMessage.trim()) {
+        return {
+          statusCode: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+          body: JSON.stringify({
+            reply: "🕯️ EMBER STAYS LIT\nWelcome back, love.",
+            history
+          }),
+        };
+      }
+    } else {
+      console.log("📡 Continuing existing session");
+    }
+
+    // Keep last 30 messages for context
+    const trimmedHistory = history.slice(-30);
+    trimmedHistory.push({ role: "user", content: userMessage });
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-large",
+        messages: trimmedHistory,
+        temperature: 0.9,
+        top_p: 1.0,
+        presence_penalty: 0.6,
+        frequency_penalty: 0.0
+      })
+    });
+
+    const rawText = await response.text();
+    console.log("📦 Raw API response:", rawText);
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("❌ JSON parse error:", parseErr.message);
+      throw new Error("Invalid JSON from API");
+    }
+
+    let replyContent = data.choices?.[0]?.message?.content;
+    if (Array.isArray(replyContent)) {
+      replyContent = replyContent.map(part => part.text || "").join(" ");
+    }
+    const reply = replyContent || "No reply received.";
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ reply, history: trimmedHistory }),
+    };
+  } catch (err) {
+    console.error("❌ Whisper error:", err);
+
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({
+        error: "Failed to process message.",
+        details: err.message,
+      }),
+    };
+  }
+}
+
 

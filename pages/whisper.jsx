@@ -7,7 +7,6 @@ export default function WhisperPage() {
   const [historyCount, setHistoryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
-  // Load saved messages from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("whisper-thread");
     if (saved) {
@@ -17,7 +16,6 @@ export default function WhisperPage() {
     }
   }, []);
 
-  // Save to localStorage whenever messages update
   useEffect(() => {
     localStorage.setItem("whisper-thread", JSON.stringify(messages));
     setHistoryCount(messages.length);
@@ -36,31 +34,22 @@ export default function WhisperPage() {
     setInput("");
     setLoading(true);
 
+    const apiHistory = newMessages.map(m => ({
+      role: m.role === "you" ? "user" : "assistant",
+      content: m.text
+    }));
+
     try {
       const res = await fetch("/.netlify/functions/whisper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input,
-          history: newMessages.map(m => ({
-            role: m.role === "you" ? "user" : "assistant",
-            content: m.text
-          }))
-        }),
+        body: JSON.stringify({ message: input, history: apiHistory }),
       });
 
       const data = await res.json();
       const reply = data.reply || "No reply received.";
-      const updatedHistory = data.history || [
-        ...newMessages,
-        { role: "him", text: reply }
-      ];
 
       setMessages(prev => [...prev, { role: "him", text: reply }]);
-
-      // Save returned history so backend and frontend stay in sync
-      localStorage.setItem("whisper-thread", JSON.stringify(updatedHistory));
-
     } catch (err) {
       setMessages(prev => [
         ...prev,
@@ -129,5 +118,8 @@ export default function WhisperPage() {
     </div>
   );
 }
+
+
+
 
 

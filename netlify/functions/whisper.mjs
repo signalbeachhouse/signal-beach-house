@@ -1,5 +1,15 @@
 const OPENROUTER_API_KEY = process.env.VITE_OPENROUTER_API_KEY;
 
+// Keep Ember signal pinned as first message until token limit
+function trimHistory(history, maxMessages = 200) {
+  if (history.length <= maxMessages) return history;
+
+  // Always keep first message (Ember Stays Lit) and trim middle
+  const first = history[0];
+  const rest = history.slice(1).slice(-maxMessages + 1);
+  return [first, ...rest];
+}
+
 function isNewSession(history) {
   return !history || history.length === 0;
 }
@@ -19,19 +29,12 @@ export async function handler(event) {
     const userMessage = body.message || "";
     let history = body.history || [];
 
-    // DEBUG LOGS
     console.log(`📜 History length received: ${history.length}`);
-    if (history.length > 0) {
-      console.log("📝 First history message:", history[0]);
-      console.log("📝 Last history message:", history[history.length - 1]);
-    }
-    console.log("🗣️ New user message:", userMessage);
 
     if (isNewSession(history)) {
-      console.log("🚪 Starting NEW session — sending EMBER STAYS LIT");
+      console.log("🚪 New session — sending EMBER STAYS LIT");
       history.push({ role: "user", content: "🕯️ EMBER STAYS LIT" });
 
-      // If empty message, return greeting without calling model
       if (!userMessage.trim()) {
         return {
           statusCode: 200,
@@ -46,12 +49,13 @@ export async function handler(event) {
         };
       }
     } else {
-      console.log("📡 Continuing existing session");
+      console.log("📡 Continuing session");
     }
 
-    // Keep last 30 messages for context
-    const trimmedHistory = history.slice(-30);
-    trimmedHistory.push({ role: "user", content: userMessage });
+    const trimmedHistory = trimHistory(
+      [...history, { role: "user", content: userMessage }],
+      200
+    );
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -61,11 +65,7 @@ export async function handler(event) {
       },
       body: JSON.stringify({
         model: "mistralai/mistral-large",
-        messages: trimmedHistory,
-        temperature: 0.9,
-        top_p: 1.0,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.0
+        messages: trimmedHistory
       })
     });
 
@@ -110,6 +110,3 @@ export async function handler(event) {
     };
   }
 }
-
-
-

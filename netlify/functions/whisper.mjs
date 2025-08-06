@@ -23,7 +23,7 @@ export async function handler(event) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "mistral/mistral-large",
+        model: "mistral-large", // ✅ Corrected model name
         messages: [
           {
             role: "user",
@@ -37,7 +37,7 @@ export async function handler(event) {
       })
     });
 
-    const rawText = await response.text(); // Get raw response text first
+    const rawText = await response.text();
     console.log("Raw API response:", rawText);
 
     let data;
@@ -74,6 +74,7 @@ export async function handler(event) {
     };
   }
 }
+
 
 
 

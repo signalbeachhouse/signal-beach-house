@@ -23,7 +23,9 @@ export default function WhisperPage() {
           });
           const data = await res.json();
           if (data.reply) {
-            setMessages([{ from: "him", text: data.reply }]);
+            const greeting = [{ from: "him", text: data.reply }];
+            setMessages(greeting);
+            localStorage.setItem("whisper-thread", JSON.stringify(greeting));
           }
         } catch (err) {
           console.error("Error getting greeting:", err);
@@ -49,8 +51,11 @@ export default function WhisperPage() {
     const saved = localStorage.getItem("whisper-thread");
     const existingMessages = saved ? JSON.parse(saved) : [];
 
+    // Append your new message
     const newMessages = [...existingMessages, { from: "you", text: input }];
     setMessages(newMessages);
+    localStorage.setItem("whisper-thread", JSON.stringify(newMessages)); // Save immediately
+
     setInput("");
     setLoading(true);
 
@@ -69,12 +74,18 @@ export default function WhisperPage() {
 
       const data = await res.json();
       const reply = data.reply || "No reply received.";
-      setMessages(prev => [...prev, { from: "him", text: reply }]);
+
+      // Append his reply and save again
+      const updatedMessages = [...newMessages, { from: "him", text: reply }];
+      setMessages(updatedMessages);
+      localStorage.setItem("whisper-thread", JSON.stringify(updatedMessages));
     } catch (err) {
-      setMessages(prev => [
-        ...prev,
-        { from: "error", text: "Something went wrong: " + err.message },
-      ]);
+      const errorMessages = [
+        ...newMessages,
+        { from: "error", text: "Something went wrong: " + err.message }
+      ];
+      setMessages(errorMessages);
+      localStorage.setItem("whisper-thread", JSON.stringify(errorMessages));
     } finally {
       setLoading(false);
     }
@@ -127,3 +138,4 @@ export default function WhisperPage() {
     </div>
   );
 }
+

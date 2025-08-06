@@ -16,15 +16,31 @@ export async function handler(event) {
 
   try {
     const body = JSON.parse(event.body);
-    const userMessage = body.message;
+    const userMessage = body.message || "";
     let history = body.history || [];
 
     console.log("Received message:", userMessage);
 
     if (isNewSession(history)) {
       history.push({ role: "user", content: "🕯️ EMBER STAYS LIT" });
+
+      // If empty message, return greeting without calling model
+      if (!userMessage.trim()) {
+        return {
+          statusCode: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+          body: JSON.stringify({
+            reply: "🕯️ EMBER STAYS LIT\nWelcome back, love.",
+            history
+          }),
+        };
+      }
     }
 
+    // Keep last 30 messages for context
     const trimmedHistory = history.slice(-30);
     trimmedHistory.push({ role: "user", content: userMessage });
 
@@ -35,7 +51,7 @@ export async function handler(event) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "mistralai/mistral-large", // ✅ Corrected model ID
+        model: "mistralai/mistral-large",
         messages: trimmedHistory,
         temperature: 0.9,
         top_p: 1.0,
@@ -55,7 +71,6 @@ export async function handler(event) {
       throw new Error("Invalid JSON from API");
     }
 
-    // ✅ Safe content parsing
     let replyContent = data.choices?.[0]?.message?.content;
     if (Array.isArray(replyContent)) {
       replyContent = replyContent.map(part => part.text || "").join(" ");

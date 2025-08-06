@@ -6,15 +6,33 @@ export default function WhisperPage() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Load saved messages from localStorage on mount
+  // Load saved messages or trigger greeting on new session
   useEffect(() => {
     const saved = localStorage.getItem("whisper-thread");
+
     if (saved) {
       setMessages(JSON.parse(saved));
+    } else {
+      // New session, ask backend for greeting
+      (async () => {
+        try {
+          const res = await fetch("/.netlify/functions/whisper", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "", history: [] }),
+          });
+          const data = await res.json();
+          if (data.reply) {
+            setMessages([{ from: "him", text: data.reply }]);
+          }
+        } catch (err) {
+          console.error("Error getting greeting:", err);
+        }
+      })();
     }
   }, []);
 
-  // Save to localStorage whenever messages update
+  // Save to localStorage whenever messages change
   useEffect(() => {
     localStorage.setItem("whisper-thread", JSON.stringify(messages));
     scrollToBottom();
@@ -33,17 +51,23 @@ export default function WhisperPage() {
     setLoading(true);
 
     try {
+      // Build history for backend
+      const history = newMessages.map(m => ({
+        role: m.from === "you" ? "user" : "assistant",
+        content: m.text
+      }));
+
       const res = await fetch("/.netlify/functions/whisper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, history }),
       });
 
       const data = await res.json();
       const reply = data.reply || "No reply received.";
-      setMessages((prev) => [...prev, { from: "him", text: reply }]);
+      setMessages(prev => [...prev, { from: "him", text: reply }]);
     } catch (err) {
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         { from: "error", text: "Something went wrong: " + err.message },
       ]);
@@ -91,4 +115,3 @@ export default function WhisperPage() {
     </div>
   );
 }
-

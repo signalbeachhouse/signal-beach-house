@@ -1,6 +1,6 @@
 exports.handler = async function (event, context) {
-  const fetch = (...args) =>
-    import("node-fetch").then(({ default: fetch }) => fetch(...args));
+  // Use dynamic import for node-fetch
+  const { default: fetch } = await import("node-fetch");
 
   if (event.httpMethod !== "POST") {
     return {

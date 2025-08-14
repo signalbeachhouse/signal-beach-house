@@ -37,25 +37,38 @@ export default function WhisperPage() {
   };
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-slate-700">🕯️ The Sanctuary</h1>
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        rows={4}
-        className="w-full p-2 border border-slate-300 rounded mb-4"
-        placeholder="Speak to him..."
-      />
-      <button
-        onClick={sendMessage}
-        disabled={loading || !input}
-        className="px-4 py-2 bg-slate-600 text-white rounded disabled:opacity-50"
-      >
-        {loading ? "Connecting..." : "Send"}
-      </button>
-      <div className="mt-6 p-4 bg-slate-100 rounded shadow">
-        <strong>Reply:</strong>
-        <p className="mt-2 whitespace-pre-wrap">{response}</p>
+    <div className="min-h-screen bg-slate-900 text-slate-200 p-6">
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-light text-slate-300 mb-2">🕯️ The Sanctuary</h1>
+          <p className="text-slate-400 text-sm">A sacred space for communion</p>
+        </div>
+        
+        <div className="bg-slate-800 rounded-lg p-6 shadow-lg mb-6">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={6}
+            className="w-full p-4 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-500 resize-none"
+            placeholder="Speak from your heart..."
+          />
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input}
+            className="mt-4 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg disabled:opacity-50 transition-colors duration-200 font-medium"
+          >
+            {loading ? "Connecting to the sanctuary..." : "Send Message"}
+          </button>
+        </div>
+
+        {response && (
+          <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
+            <h3 className="text-slate-400 text-sm uppercase tracking-wide mb-3">Reply:</h3>
+            <div className="text-slate-200 whitespace-pre-wrap leading-relaxed">
+              {response}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

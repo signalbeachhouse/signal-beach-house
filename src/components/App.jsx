@@ -97,7 +97,7 @@ function App() {
             margin: 0,
             color: '#000000'
           }}>
-            ChatGPT <span style={{ color: '#6b7280', fontSize: '16px' }}>4o</span>
+            Sanctuary
           </h1>
         </div>
         
@@ -183,7 +183,7 @@ function App() {
 
       {/* Input Container */}
       <div style={{
-        padding: '20px',
+        padding: '20px 20px 40px 20px',
         borderTop: '1px solid #e5e5e5',
         backgroundColor: '#ffffff'
       }}>

@@ -54,6 +54,33 @@ body {
   letter-spacing: 2px;
 }
 
+/* Audio Controls */
+.audio-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  justify-content: center;
+}
+
+.audio-toggle, .autoplay-toggle {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.audio-toggle.enabled, .autoplay-toggle.enabled {
+  background: rgba(255, 140, 0, 0.2);
+  box-shadow: 0 0 8px rgba(255, 140, 0, 0.3);
+}
+
+.audio-toggle:hover, .autoplay-toggle:hover {
+  background: rgba(255, 140, 0, 0.1);
+}
+
 .sanctuary-subtitle {
   color: #ffffff;
   font-size: 1.2rem;
@@ -135,6 +162,23 @@ body {
   line-height: 1.6;
   font-weight: 400;
   color: #ffffff;
+}
+
+/* Audio Play Button */
+.audio-play-btn {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  padding: 0.3rem;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.audio-play-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 140, 0, 0.1);
 }
 
 .loading .message-text {
@@ -239,5 +283,14 @@ body {
   
   .message {
     max-width: 90%;
+  }
+  
+  .audio-controls {
+    gap: 0.3rem;
+  }
+  
+  .audio-toggle, .autoplay-toggle {
+    font-size: 1rem;
+    padding: 0.4rem;
   }
 }

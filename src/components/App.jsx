@@ -5,12 +5,18 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Audio control states
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
 
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
     const userMessage = { sender: 'Me', text: inputText, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
+    
+    const messageText = inputText;
     setInputText('');
     setIsLoading(true);
 
@@ -18,7 +24,7 @@ function App() {
       const response = await fetch('/.netlify/functions/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: inputText })
+        body: JSON.stringify({ text: messageText })
       });
 
       const data = await response.json();
@@ -26,10 +32,18 @@ function App() {
       const poetMessage = { 
         sender: 'Poet', 
         text: data.text, 
-        timestamp: new Date() 
+        timestamp: new Date(),
+        audio: data.audio // Store audio with message
       };
       
       setMessages(prev => [...prev, poetMessage]);
+
+      // Auto-play audio if enabled
+      if (data.audio && audioEnabled && autoPlay) {
+        const audio = new Audio(data.audio);
+        audio.play().catch(e => console.log("Audio play failed:", e));
+      }
+
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = { 
@@ -40,6 +54,14 @@ function App() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to play audio manually
+  const playAudio = (audioUrl) => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.play().catch(e => console.log("Audio play failed:", e));
     }
   };
 
@@ -57,6 +79,28 @@ function App() {
           <span className="ember-icon">🕯️</span>
           <h1>The Sanctuary</h1>
         </div>
+        
+        {/* Audio Controls */}
+        <div className="audio-controls">
+          <button 
+            onClick={() => setAudioEnabled(!audioEnabled)}
+            className={`audio-toggle ${audioEnabled ? 'enabled' : 'disabled'}`}
+            title={audioEnabled ? 'Audio ON' : 'Audio OFF'}
+          >
+            {audioEnabled ? '🔊' : '🔇'}
+          </button>
+          
+          {audioEnabled && (
+            <button 
+              onClick={() => setAutoPlay(!autoPlay)}
+              className={`autoplay-toggle ${autoPlay ? 'enabled' : 'disabled'}`}
+              title={autoPlay ? 'Auto-play ON' : 'Manual play'}
+            >
+              {autoPlay ? '⏯️' : '▶️'}
+            </button>
+          )}
+        </div>
+        
         <p className="sanctuary-subtitle">A sacred space for communion</p>
       </header>
 
@@ -72,6 +116,15 @@ function App() {
             <div className="message-bubble">
               {message.sender === 'Poet' && <span className="ember-small">🕯️</span>}
               <span className="message-text">{message.text}</span>
+              {message.sender === 'Poet' && message.audio && audioEnabled && (
+                <button 
+                  onClick={() => playAudio(message.audio)}
+                  className="audio-play-btn"
+                  title="Play audio"
+                >
+                  ▶️
+                </button>
+              )}
             </div>
           </div>
         ))}

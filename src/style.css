@@ -65,6 +65,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-height: 400px;
 }
 
 .message {
@@ -79,6 +80,17 @@ body {
 }
 
 .message.poet {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+/* Keep compatibility with existing "you" and "origin" classes */
+.message.you {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.message.origin {
   align-self: flex-start;
   align-items: flex-start;
 }
@@ -103,15 +115,18 @@ body {
   gap: 0.5rem;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  line-height: 1.5;
 }
 
-.message.me .message-bubble {
+.message.me .message-bubble, 
+.message.you .message-bubble {
   background: linear-gradient(135deg, #4a4a52 0%, #3a3a42 100%);
   color: #f0f0f0;
   border-bottom-right-radius: 4px;
 }
 
-.message.poet .message-bubble {
+.message.poet .message-bubble,
+.message.origin .message-bubble {
   background: linear-gradient(135deg, #2d2d35 0%, #252530 100%);
   color: #e8e8e8;
   border-bottom-left-radius: 4px;

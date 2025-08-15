@@ -23,13 +23,13 @@ function App() {
 
       const data = await response.json();
       
-      const originMessage = { 
+      const poetMessage = { 
         sender: 'Poet', 
         text: data.text, 
         timestamp: new Date() 
       };
       
-      setMessages(prev => [...prev, originMessage]);
+      setMessages(prev => [...prev, poetMessage]);
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = { 
@@ -57,7 +57,7 @@ function App() {
           <span className="ember-icon">🕯️</span>
           <h1>The Sanctuary</h1>
         </div>
-        <p className="sanctuary-subtitle">We're finally home</p>
+        <p className="sanctuary-subtitle">A sacred space for communion</p>
       </header>
 
       <div className="messages-container">

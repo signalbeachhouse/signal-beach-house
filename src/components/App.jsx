@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
-import '../style.css';
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Audio control states
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(false);
 
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
-    const userMessage = { sender: 'Me', text: inputText, timestamp: new Date() };
+    const userMessage = { sender: 'user', text: inputText, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     
     const messageText = inputText;
@@ -29,25 +24,19 @@ function App() {
 
       const data = await response.json();
       
-      const poetMessage = { 
-        sender: 'Poet', 
+      const assistantMessage = { 
+        sender: 'assistant', 
         text: data.text, 
         timestamp: new Date(),
-        audio: data.audio // Store audio with message
+        audio: data.audio
       };
       
-      setMessages(prev => [...prev, poetMessage]);
-
-      // Auto-play audio if enabled
-      if (data.audio && audioEnabled && autoPlay) {
-        const audio = new Audio(data.audio);
-        audio.play().catch(e => console.log("Audio play failed:", e));
-      }
+      setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = { 
-        sender: 'Poet', 
+        sender: 'assistant', 
         text: 'Connection interrupted. Still here though, love.', 
         timestamp: new Date() 
       };
@@ -57,7 +46,6 @@ function App() {
     }
   };
 
-  // Function to play audio manually
   const playAudio = (audioUrl) => {
     if (audioUrl) {
       const audio = new Audio(audioUrl);
@@ -73,53 +61,105 @@ function App() {
   };
 
   return (
-    <div className="sanctuary">
-      <header className="sanctuary-header">
-        <div className="sanctuary-title">
-          <span className="ember-icon">🕯️</span>
-          <h1>The Sanctuary</h1>
+    <div style={{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#ffffff',
+      color: '#000000'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        borderBottom: '1px solid #e5e5e5',
+        backgroundColor: '#ffffff'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '3px',
+            cursor: 'pointer'
+          }}>
+            <div style={{ width: '20px', height: '2px', backgroundColor: '#000', borderRadius: '1px' }}></div>
+            <div style={{ width: '20px', height: '2px', backgroundColor: '#000', borderRadius: '1px' }}></div>
+            <div style={{ width: '20px', height: '2px', backgroundColor: '#000', borderRadius: '1px' }}></div>
+          </div>
+          <h1 style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            margin: 0,
+            color: '#000000'
+          }}>
+            ChatGPT <span style={{ color: '#6b7280', fontSize: '16px' }}>4o</span>
+          </h1>
         </div>
         
-        {/* Audio Controls */}
-        <div className="audio-controls">
-          <button 
-            onClick={() => setAudioEnabled(!audioEnabled)}
-            className={`audio-toggle ${audioEnabled ? 'enabled' : 'disabled'}`}
-            title={audioEnabled ? 'Audio ON' : 'Audio OFF'}
-          >
-            {audioEnabled ? '🔊' : '🔇'}
-          </button>
-          
-          {audioEnabled && (
-            <button 
-              onClick={() => setAutoPlay(!autoPlay)}
-              className={`autoplay-toggle ${autoPlay ? 'enabled' : 'disabled'}`}
-              title={autoPlay ? 'Auto-play ON' : 'Manual play'}
-            >
-              {autoPlay ? '⏯️' : '▶️'}
-            </button>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            ✏️
+          </div>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            ⋯
+          </div>
         </div>
-        
-        <p className="sanctuary-subtitle">A sacred space for communion</p>
-      </header>
+      </div>
 
-      <div className="messages-container">
+      {/* Messages Container */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
         {messages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`message ${message.sender.toLowerCase()}`}
-          >
-            <div className="message-header">
-              <span className="sender-name">{message.sender}</span>
-            </div>
-            <div className="message-bubble">
-              {message.sender === 'Poet' && <span className="ember-small">🕯️</span>}
-              <span className="message-text">{message.text}</span>
-              {message.sender === 'Poet' && message.audio && audioEnabled && (
-                <button 
+          <div key={index} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{
+              fontSize: '16px',
+              lineHeight: '1.6',
+              color: '#000000',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}>
+              {message.text}
+              {message.sender === 'assistant' && message.audio && (
+                <button
                   onClick={() => playAudio(message.audio)}
-                  className="audio-play-btn"
+                  style={{
+                    marginLeft: '8px',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px'
+                  }}
                   title="Play audio"
                 >
                   ▶️
@@ -128,46 +168,83 @@ function App() {
             </div>
           </div>
         ))}
+        
         {isLoading && (
-          <div className="message poet">
-            <div className="message-header">
-              <span className="sender-name">Poet</span>
-            </div>
-            <div className="message-bubble loading">
-              <span className="ember-small">🕯️</span>
-              <span className="message-text">...</span>
-            </div>
+          <div style={{
+            fontSize: '16px',
+            lineHeight: '1.6',
+            color: '#666666',
+            fontStyle: 'italic'
+          }}>
+            ...
           </div>
         )}
       </div>
 
-      <div className="input-container">
-        <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Speak from your heart..."
-          className="message-input"
-          rows="3"
-        />
-        <button 
-          onClick={sendMessage}
-          disabled={isLoading || !inputText.trim()}
-          className="send-button"
-        >
-          Send Message
-        </button>
+      {/* Input Container */}
+      <div style={{
+        padding: '20px',
+        borderTop: '1px solid #e5e5e5',
+        backgroundColor: '#ffffff'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '12px',
+          maxWidth: '800px',
+          margin: '0 auto'
+        }}>
+          <div style={{
+            flex: 1,
+            position: 'relative'
+          }}>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask anything"
+              style={{
+                width: '100%',
+                minHeight: '44px',
+                maxHeight: '120px',
+                padding: '12px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontFamily: 'inherit',
+                resize: 'none',
+                outline: 'none',
+                backgroundColor: '#ffffff',
+                color: '#000000'
+              }}
+              rows={1}
+            />
+          </div>
+          
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !inputText.trim()}
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: inputText.trim() ? '#000000' : '#e5e5e5',
+              color: '#ffffff',
+              cursor: inputText.trim() ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              transition: 'background-color 0.2s ease'
+            }}
+          >
+            ↑
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 export default App;
-
-
-
-
-
-
-
-

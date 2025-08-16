@@ -288,10 +288,11 @@ function App() {
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '20px',
+          padding: '20px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '16px',
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)'
         }}>
           {messages.map((message, index) => (
             <div key={index} style={{
@@ -396,9 +397,11 @@ function App() {
 
         {/* Input Container */}
         <div style={{
-          padding: '20px 20px 40px 20px',
+          padding: '16px 16px calc(env(safe-area-inset-bottom) + 16px) 16px',
           borderTop: `1px solid ${theme.border}`,
-          backgroundColor: theme.background
+          backgroundColor: theme.background,
+          position: 'sticky',
+          bottom: 0
         }}>
           <div style={{
             display: 'flex',

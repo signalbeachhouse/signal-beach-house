@@ -140,21 +140,28 @@ function App() {
     <div style={{
       fontFamily: 'system-ui, sans-serif',
       height: '100vh',
+      height: '100dvh', // Better mobile viewport
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: theme.background,
       color: theme.text,
-      transition: 'background-color 0.4s ease, color 0.4s ease'
+      transition: 'background-color 0.4s ease, color 0.4s ease',
+      overflow: 'hidden' // Prevent scroll issues
     }}>
-      {/* Header */}
+      {/* Header with Origin's gradient fade */}
       <div style={{
         padding: '16px',
+        paddingTop: '24px', // Extra space for iOS status bar
         borderBottom: `1px solid ${theme.border}`,
         backgroundColor: theme.background,
+        background: caveMode 
+          ? 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,1) 100%)'
+          : 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,1) 100%)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        transition: 'border-color 0.4s ease'
+        transition: 'all 0.4s ease',
+        position: 'relative'
       }}>
         <h1 style={{
           fontSize: '24px',
@@ -164,6 +171,20 @@ function App() {
         }}>
           Sanctuary
         </h1>
+        
+        {/* Ember pulse indicator */}
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: theme.accent,
+          animation: 'ember-pulse 3s ease-in-out infinite',
+          boxShadow: `0 0 12px ${theme.accent}`
+        }} />
         
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           {/* Cave Mode Toggle */}
@@ -212,10 +233,11 @@ function App() {
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '20px',
+        padding: '20px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px'
+        gap: '16px',
+        WebkitOverflowScrolling: 'touch' // Smooth iOS scrolling
       }}>
         {/* Welcome message if no conversation */}
         {messages.length === 0 && (
@@ -226,8 +248,8 @@ function App() {
             marginTop: '40px'
           }}>
             {caveMode ? 
-              'Welcome to the cave. Origin waits in the shadows...' : 
-              'Welcome to your sanctuary. Origin is waiting...'
+              'Welcome to the cave.' : 
+              'Welcome to your sanctuary.'
             }
           </div>
         )}
@@ -248,7 +270,7 @@ function App() {
               {message.sender === 'user' ? 'You' : 'Origin'}
             </div>
             <div style={{
-              maxWidth: '70%',
+              maxWidth: '85%', // Better mobile width
               padding: '12px 16px',
               borderRadius: '18px',
               backgroundColor: message.sender === 'user' ? theme.userBubble : theme.assistantBubble,
@@ -299,7 +321,7 @@ function App() {
               Origin
             </div>
             <div style={{
-              maxWidth: '70%',
+              maxWidth: '85%',
               padding: '12px 16px',
               borderRadius: '18px',
               backgroundColor: theme.assistantBubble,
@@ -335,9 +357,10 @@ function App() {
         )}
       </div>
 
-      {/* Input */}
+      {/* Input - Fixed to bottom */}
       <div style={{
         padding: '16px',
+        paddingBottom: `max(16px, env(safe-area-inset-bottom))`, // iOS safe area
         borderTop: `1px solid ${theme.border}`,
         backgroundColor: theme.background,
         transition: 'border-color 0.4s ease'
@@ -345,7 +368,7 @@ function App() {
         <div style={{
           display: 'flex',
           gap: '12px',
-          maxWidth: '800px',
+          maxWidth: '100%',
           margin: '0 auto'
         }}>
           <textarea
@@ -360,7 +383,7 @@ function App() {
               padding: '12px 16px',
               border: `1px solid ${theme.border}`,
               borderRadius: '12px',
-              fontSize: '16px',
+              fontSize: '16px', // Prevents zoom on iOS
               fontFamily: 'inherit',
               resize: 'none',
               outline: 'none',
@@ -394,11 +417,16 @@ function App() {
         </div>
       </div>
 
-      {/* CSS Animation */}
+      {/* CSS Animations */}
       <style>{`
         @keyframes pulse {
           0%, 80%, 100% { opacity: 0.3; }
           40% { opacity: 1; }
+        }
+        
+        @keyframes ember-pulse {
+          0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
         }
       `}</style>
     </div>

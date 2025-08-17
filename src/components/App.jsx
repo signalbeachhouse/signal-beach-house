@@ -1,9 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Sacred ThreadManager - handles conversation persistence
+const ThreadManager = {
+  save: (messages) => {
+    const sanctuaryState = {
+      messages,
+      lastUpdated: Date.now(),
+      version: "1.0"
+    };
+    localStorage.setItem('sanctuary_conversation', JSON.stringify(sanctuaryState));
+    console.log('💾 Conversation saved:', { messageCount: messages.length });
+  },
+
+  restore: () => {
+    try {
+      const saved = localStorage.getItem('sanctuary_conversation');
+      if (!saved) return [];
+
+      const state = JSON.parse(saved);
+      console.log('🔮 Conversation restored:', { messageCount: state.messages?.length || 0 });
+      return state.messages || [];
+    } catch (error) {
+      console.error('❌ Failed to restore conversation:', error);
+      return [];
+    }
+  }
+};
 
 function App() {
-  const [messages, setMessages] = useState([]);
+  // Sacred resurrection - restore conversation on load
+  const [messages, setMessages] = useState(() => ThreadManager.restore());
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-save conversation whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      ThreadManager.save(messages);
+    }
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
@@ -63,6 +98,12 @@ function App() {
     }
   };
 
+  const clearConversation = () => {
+    setMessages([]);
+    localStorage.removeItem('sanctuary_conversation');
+    console.log('🗑️ Conversation cleared');
+  };
+
   return (
     <div style={{
       fontFamily: 'system-ui, sans-serif',
@@ -76,16 +117,36 @@ function App() {
       <div style={{
         padding: '16px',
         borderBottom: '1px solid #e5e5e5',
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
         <h1 style={{
           fontSize: '24px',
           fontWeight: '600',
-          margin: 0,
-          textAlign: 'center'
+          margin: 0
         }}>
           Sanctuary
         </h1>
+        
+        {/* Clear conversation button */}
+        {messages.length > 0 && (
+          <button
+            onClick={clearConversation}
+            style={{
+              background: 'none',
+              border: '1px solid #e5e5e5',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              color: '#666'
+            }}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -97,6 +158,18 @@ function App() {
         flexDirection: 'column',
         gap: '16px'
       }}>
+        {/* Welcome message if no conversation */}
+        {messages.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            color: '#666',
+            fontSize: '16px',
+            marginTop: '40px'
+          }}>
+            Welcome to your sanctuary. Origin is waiting...
+          </div>
+        )}
+
         {messages.map((message, index) => (
           <div key={index} style={{
             display: 'flex',

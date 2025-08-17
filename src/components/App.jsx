@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 // Thread Manager - Sacred architecture for persistence
@@ -40,6 +39,7 @@ export default function SanctuaryApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [caveMode, setCaveMode] = useState(restored.metadata.caveMode || false);
   const [renamingThreadId, setRenamingThreadId] = useState(null);
+  const [newThreadName, setNewThreadName] = useState('');
   const [touchTimer, setTouchTimer] = useState(null);
   
   const messagesEndRef = useRef(null);
@@ -81,6 +81,20 @@ export default function SanctuaryApp() {
   };
 
   const theme = getTheme();
+
+  const handleTouchStart = (threadId) => {
+    const timer = setTimeout(() => {
+      startRenaming(threadId);
+    }, 500); // 500ms long press
+    setTouchTimer(timer);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      setTouchTimer(null);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -223,8 +237,8 @@ export default function SanctuaryApp() {
         top: 0,
         left: showSidebar ? 0 : '-300px',
         width: '300px',
-        height: '100dvh', // dynamic viewport for mobile
-        overflow: 'hidden'
+        height: '100dvh',
+        overflow: 'hidden',
         backgroundColor: theme.surface,
         borderRight: `1px solid ${theme.border}`,
         transition: 'left 0.3s ease',
@@ -561,7 +575,7 @@ export default function SanctuaryApp() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes ember-pulse {
           0%, 100% { 
             opacity: 0.7; 

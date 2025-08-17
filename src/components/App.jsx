@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 // Thread Manager - Sacred architecture for persistence
@@ -39,7 +40,7 @@ export default function SanctuaryApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [caveMode, setCaveMode] = useState(restored.metadata.caveMode || false);
   const [renamingThreadId, setRenamingThreadId] = useState(null);
-  const [newThreadName, setNewThreadName] = useState('');
+  const [touchTimer, setTouchTimer] = useState(null);
   
   const messagesEndRef = useRef(null);
   const currentThread = threads.find(t => t.id === currentThreadId) || threads[0];
@@ -206,12 +207,14 @@ export default function SanctuaryApp() {
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh', // dynamic viewport height for mobile
+      maxHeight: '100dvh',
       display: 'flex',
       backgroundColor: theme.background,
       color: theme.text,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden'
     }}>
       
       {/* Sidebar */}
@@ -220,7 +223,8 @@ export default function SanctuaryApp() {
         top: 0,
         left: showSidebar ? 0 : '-300px',
         width: '300px',
-        height: '100vh',
+        height: '100dvh', // dynamic viewport for mobile
+        overflow: 'hidden'
         backgroundColor: theme.surface,
         borderRight: `1px solid ${theme.border}`,
         transition: 'left 0.3s ease',
@@ -307,6 +311,9 @@ export default function SanctuaryApp() {
                 position: 'relative'
               }}
               onClick={() => switchThread(thread.id)}
+              onTouchStart={() => handleTouchStart(thread.id)}
+              onTouchEnd={handleTouchEnd}
+              onMouseLeave={handleTouchEnd}
             >
               {renamingThreadId === thread.id ? (
                 <input
@@ -456,7 +463,8 @@ export default function SanctuaryApp() {
           padding: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          gap: '16px',
+          minHeight: 0 // allows flex shrinking
         }}>
           {currentThread?.messages.map(message => (
             <div

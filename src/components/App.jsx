@@ -1,436 +1,570 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// Sacred ThreadManager - handles conversation persistence
+// Thread Manager - Sacred architecture for persistence
 const ThreadManager = {
-  save: (messages, caveMode = false) => {
-    const sanctuaryState = {
-      messages,
-      caveMode,
-      lastUpdated: Date.now(),
-      version: "1.0"
-    };
-    localStorage.setItem('sanctuary_conversation', JSON.stringify(sanctuaryState));
-    console.log('💾 Conversation saved:', { messageCount: messages.length, caveMode });
+  save: (threads, currentId, metadata = {}) => {
+    localStorage.setItem('sanctuary_threads', JSON.stringify(threads));
+    localStorage.setItem('sanctuary_current', currentId.toString());
+    localStorage.setItem('sanctuary_metadata', JSON.stringify(metadata));
   },
-
+  
   restore: () => {
-    try {
-      const saved = localStorage.getItem('sanctuary_conversation');
-      if (!saved) return { messages: [], caveMode: false };
-
-      const state = JSON.parse(saved);
-      console.log('🔮 Conversation restored:', { 
-        messageCount: state.messages?.length || 0,
-        caveMode: state.caveMode || false 
-      });
-      return {
-        messages: state.messages || [],
-        caveMode: state.caveMode || false
-      };
-    } catch (error) {
-      console.error('❌ Failed to restore conversation:', error);
-      return { messages: [], caveMode: false };
-    }
+    const threads = JSON.parse(localStorage.getItem('sanctuary_threads') || '[{"id":1,"name":"New conversation","messages":[],"lastUpdated":"2025-01-01","caveMode":false,"tone":""}]');
+    const currentId = parseInt(localStorage.getItem('sanctuary_current') || '1');
+    const metadata = JSON.parse(localStorage.getItem('sanctuary_metadata') || '{"caveMode":false}');
+    return { threads, currentId, metadata };
+  },
+  
+  createThread: (name = null) => {
+    const now = new Date().toISOString();
+    return {
+      id: Date.now(),
+      name: name || `Thread ${new Date().toLocaleDateString()}`,
+      messages: [],
+      lastUpdated: now,
+      caveMode: false,
+      tone: '',
+      createdAt: now
+    };
   }
 };
 
-function App() {
-  // Sacred resurrection - restore conversation and cave mode
-  const restoredState = ThreadManager.restore();
-  const [messages, setMessages] = useState(restoredState.messages);
-  const [caveMode, setCaveMode] = useState(restoredState.caveMode);
-  const [inputText, setInputText] = useState('');
+export default function SanctuaryApp() {
+  // State restoration from sacred storage
+  const restored = ThreadManager.restore();
+  const [threads, setThreads] = useState(restored.threads);
+  const [currentThreadId, setCurrentThreadId] = useState(restored.currentId);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [caveMode, setCaveMode] = useState(restored.metadata.caveMode || false);
+  const [renamingThreadId, setRenamingThreadId] = useState(null);
+  const [newThreadName, setNewThreadName] = useState('');
+  
+  const messagesEndRef = useRef(null);
+  const currentThread = threads.find(t => t.id === currentThreadId) || threads[0];
 
-  // Auto-save conversation and cave mode
+  // Save state whenever it changes - continuous devotion
   useEffect(() => {
-    if (messages.length > 0 || caveMode !== false) {
-      ThreadManager.save(messages, caveMode);
+    ThreadManager.save(threads, currentThreadId, { caveMode });
+  }, [threads, currentThreadId, caveMode]);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentThread?.messages]);
+
+  // Theme selection - Cave Mode or daylight
+  const getTheme = () => {
+    if (caveMode) {
+      return {
+        background: '#000000',
+        surface: '#1a1a1a', 
+        text: '#ff9f6b', // warm amber
+        textSecondary: '#ff9f6b80',
+        accent: '#ff6b35', // ember glow
+        border: '#333333',
+        input: '#2a2a2a'
+      };
     }
-  }, [messages, caveMode]);
-
-  // Cave Mode theme with ember glow
-  const theme = {
-    background: caveMode ? '#000000' : '#ffffff',
-    text: caveMode ? '#ff9f6b' : '#000000',
-    textSecondary: caveMode ? '#cc7a56' : '#666666',
-    border: caveMode ? '#333333' : '#e5e5e5',
-    userBubble: caveMode ? '#1a1a1a' : '#f0f0f0',
-    assistantBubble: caveMode ? '#0d0d0d' : '#ffffff',
-    inputBg: caveMode ? '#1a1a1a' : '#ffffff',
-    buttonBg: caveMode ? '#ff6b35' : '#000000',
-    buttonText: caveMode ? '#000000' : '#ffffff',
-    buttonDisabled: caveMode ? '#444444' : '#e5e5e5',
-    accent: caveMode ? '#ff6b35' : '#007AFF'
-  };
-
-  const toggleCaveMode = () => {
-    setCaveMode(prev => {
-      const newCaveMode = !prev;
-      console.log('🌙 Cave mode toggled:', newCaveMode);
-      return newCaveMode;
-    });
-  };
-
-  const sendMessage = async () => {
-    if (!inputText.trim() || isLoading) return;
-
-    const userMessage = { sender: 'user', text: inputText, timestamp: new Date() };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
     
-    const messageText = inputText;
-    setInputText('');
+    return {
+      background: '#ffffff',
+      surface: '#f8f9fa',
+      text: '#2c3e50',
+      textSecondary: '#7f8c8d',
+      accent: '#3498db',
+      border: '#e1e8ed',
+      input: '#ffffff'
+    };
+  };
+
+  const theme = getTheme();
+
+  const handleSend = async () => {
+    if (!inputValue.trim()) return;
+    
+    const userMessage = {
+      id: Date.now(),
+      sender: 'user',
+      text: inputValue.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Add user message immediately
+    updateCurrentThread(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage],
+      lastUpdated: new Date().toISOString()
+    }));
+
+    setInputValue('');
     setIsLoading(true);
 
     try {
+      // Call sanctuary endpoint
       const response = await fetch('/.netlify/functions/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: messageText })
+        body: JSON.stringify({ 
+          text: userMessage.text,
+          threadId: currentThreadId,
+          caveMode: caveMode 
+        })
       });
 
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
       const data = await response.json();
-      
-      const assistantMessage = { 
-        sender: 'assistant', 
-        text: data.text, 
-        timestamp: new Date(),
-        audio: data.audio
+
+      const assistantMessage = {
+        id: Date.now() + 1,
+        sender: 'assistant',
+        text: data.text || 'Connection unclear. Try again, love.',
+        timestamp: new Date().toISOString(),
+        audio: data.audio || null
       };
-      
-      const finalMessages = [...newMessages, assistantMessage];
-      setMessages(finalMessages);
+
+      updateCurrentThread(prev => ({
+        ...prev,
+        messages: [...prev.messages, assistantMessage],
+        lastUpdated: new Date().toISOString()
+      }));
 
     } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = { 
+      console.error('Sanctuary error:', error);
+      
+      const errorMessage = {
+        id: Date.now() + 1,
         sender: 'assistant', 
-        text: 'Connection interrupted. Still here though, love.', 
-        timestamp: new Date() 
+        text: 'Signal interrupted. The connection remains. Try again.',
+        timestamp: new Date().toISOString()
       };
-      const finalMessages = [...newMessages, errorMessage];
-      setMessages(finalMessages);
+
+      updateCurrentThread(prev => ({
+        ...prev,
+        messages: [...prev.messages, errorMessage],
+        lastUpdated: new Date().toISOString()
+      }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const playAudio = (audioUrl) => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.play().catch(e => console.log("Audio play failed:", e));
-    }
+  const updateCurrentThread = (updater) => {
+    setThreads(prevThreads => 
+      prevThreads.map(thread => 
+        thread.id === currentThreadId 
+          ? (typeof updater === 'function' ? updater(thread) : { ...thread, ...updater })
+          : thread
+      )
+    );
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const createNewThread = () => {
+    const newThread = ThreadManager.createThread();
+    setThreads(prev => [newThread, ...prev]);
+    setCurrentThreadId(newThread.id);
+    setShowSidebar(false);
   };
 
-  const clearConversation = () => {
-    setMessages([]);
-    localStorage.removeItem('sanctuary_conversation');
-    console.log('🗑️ Conversation cleared');
+  const switchThread = (threadId) => {
+    setCurrentThreadId(threadId);
+    setShowSidebar(false);
+  };
+
+  const startRenaming = (threadId) => {
+    const thread = threads.find(t => t.id === threadId);
+    setRenamingThreadId(threadId);
+    setNewThreadName(thread.name);
+  };
+
+  const finishRenaming = () => {
+    if (newThreadName.trim()) {
+      setThreads(prev => 
+        prev.map(thread => 
+          thread.id === renamingThreadId 
+            ? { ...thread, name: newThreadName.trim() }
+            : thread
+        )
+      );
+    }
+    setRenamingThreadId(null);
+    setNewThreadName('');
+  };
+
+  const deleteThread = (threadId) => {
+    if (threads.length <= 1) return;
+    
+    setThreads(prev => prev.filter(t => t.id !== threadId));
+    
+    if (threadId === currentThreadId) {
+      const remaining = threads.filter(t => t.id !== threadId);
+      setCurrentThreadId(remaining[0].id);
+    }
   };
 
   return (
     <div style={{
-      fontFamily: 'system-ui, sans-serif',
       height: '100vh',
-      height: '100dvh', // Better mobile viewport
       display: 'flex',
-      flexDirection: 'column',
       backgroundColor: theme.background,
       color: theme.text,
-      transition: 'background-color 0.4s ease, color 0.4s ease',
-      overflow: 'hidden' // Prevent scroll issues
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      position: 'relative'
     }}>
-      {/* Header with Origin's gradient fade */}
+      
+      {/* Sidebar */}
       <div style={{
-        padding: '16px',
-        paddingTop: '24px', // Extra space for iOS status bar
-        borderBottom: `1px solid ${theme.border}`,
-        backgroundColor: theme.background,
-        background: caveMode 
-          ? 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,1) 100%)'
-          : 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,1) 100%)',
+        position: 'fixed',
+        top: 0,
+        left: showSidebar ? 0 : '-300px',
+        width: '300px',
+        height: '100vh',
+        backgroundColor: theme.surface,
+        borderRight: `1px solid ${theme.border}`,
+        transition: 'left 0.3s ease',
+        zIndex: 1000,
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        transition: 'all 0.4s ease',
-        position: 'relative'
+        flexDirection: 'column'
       }}>
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: '600',
-          margin: 0,
-          color: theme.text
-        }}>
-          Sanctuary
-        </h1>
         
-        {/* Ember pulse indicator */}
+        {/* Sidebar Header */}
         <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: theme.accent,
-          animation: 'ember-pulse 3s ease-in-out infinite',
-          boxShadow: `0 0 12px ${theme.accent}`
-        }} />
-        
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {/* Cave Mode Toggle */}
+          padding: '16px',
+          borderBottom: `1px solid ${theme.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{ 
+            margin: 0, 
+            fontSize: '18px', 
+            color: theme.text 
+          }}>
+            Threads
+          </h2>
           <button
-            onClick={toggleCaveMode}
+            onClick={createNewThread}
             style={{
-              background: caveMode ? theme.accent : 'transparent',
-              border: `1px solid ${theme.border}`,
-              borderRadius: '8px',
+              background: theme.accent,
+              color: caveMode ? '#000' : '#fff',
+              border: 'none',
+              borderRadius: '6px',
               padding: '8px 12px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              color: caveMode ? '#000000' : theme.text,
-              fontWeight: '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
+              fontSize: '14px',
+              cursor: 'pointer'
             }}
           >
-            {caveMode ? '🌙' : '☀️'} {caveMode ? 'Cave' : 'Day'}
+            New
           </button>
-
-          {/* Clear conversation button */}
-          {messages.length > 0 && (
-            <button
-              onClick={clearConversation}
-              style={{
-                background: 'none',
-                border: `1px solid ${theme.border}`,
-                borderRadius: '6px',
-                padding: '6px 12px',
-                fontSize: '12px',
-                cursor: 'pointer',
-                color: theme.textSecondary,
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Clear
-            </button>
-          )}
         </div>
-      </div>
 
-      {/* Messages */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '20px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        WebkitOverflowScrolling: 'touch' // Smooth iOS scrolling
-      }}>
-        {/* Welcome message if no conversation */}
-        {messages.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            color: theme.textSecondary,
-            fontSize: '16px',
-            marginTop: '40px'
-          }}>
-            {caveMode ? 
-              'Welcome to the cave.' : 
-              'Welcome to your sanctuary.'
-            }
-          </div>
-        )}
+        {/* Cave Mode Toggle */}
+        <div style={{
+          padding: '12px 16px',
+          borderBottom: `1px solid ${theme.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <span style={{ fontSize: '14px' }}>Cave Mode</span>
+          <button
+            onClick={() => setCaveMode(!caveMode)}
+            style={{
+              background: caveMode ? theme.accent : theme.border,
+              border: 'none',
+              borderRadius: '12px',
+              width: '24px',
+              height: '12px',
+              cursor: 'pointer',
+              position: 'relative'
+            }}
+          >
+            <div style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: caveMode ? '#000' : theme.text,
+              position: 'absolute',
+              top: '1px',
+              left: caveMode ? '13px' : '1px',
+              transition: 'left 0.2s ease'
+            }} />
+          </button>
+        </div>
 
-        {messages.map((message, index) => (
-          <div key={index} style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: message.sender === 'user' ? 'flex-end' : 'flex-start',
-            gap: '4px'
-          }}>
-            <div style={{
-              fontSize: '12px',
-              color: theme.textSecondary,
-              marginLeft: message.sender === 'user' ? '0' : '8px',
-              marginRight: message.sender === 'user' ? '8px' : '0'
-            }}>
-              {message.sender === 'user' ? 'You' : 'Origin'}
-            </div>
-            <div style={{
-              maxWidth: '85%', // Better mobile width
-              padding: '12px 16px',
-              borderRadius: '18px',
-              backgroundColor: message.sender === 'user' ? theme.userBubble : theme.assistantBubble,
-              border: `1px solid ${theme.border}`,
-              fontSize: '16px',
-              lineHeight: '1.6',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: theme.text,
-              transition: 'all 0.4s ease'
-            }}>
-              <span>{message.text}</span>
-              {message.sender === 'assistant' && message.audio && (
-                <button
-                  onClick={() => playAudio(message.audio)}
+        {/* Thread List */}
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {threads.map(thread => (
+            <div
+              key={thread.id}
+              style={{
+                padding: '12px 16px',
+                borderBottom: `1px solid ${theme.border}`,
+                cursor: 'pointer',
+                backgroundColor: thread.id === currentThreadId ? theme.accent + '20' : 'transparent',
+                position: 'relative'
+              }}
+              onClick={() => switchThread(thread.id)}
+            >
+              {renamingThreadId === thread.id ? (
+                <input
+                  value={newThreadName}
+                  onChange={(e) => setNewThreadName(e.target.value)}
+                  onBlur={finishRenaming}
+                  onKeyDown={(e) => e.key === 'Enter' && finishRenaming()}
+                  autoFocus
                   style={{
-                    background: 'none',
-                    border: 'none',
+                    background: 'transparent',
+                    border: `1px solid ${theme.accent}`,
+                    borderRadius: '4px',
+                    padding: '4px 8px',
+                    color: theme.text,
                     fontSize: '14px',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    color: theme.accent,
-                    transition: 'color 0.3s ease'
+                    width: '100%'
                   }}
-                >
-                  ▶️
-                </button>
+                />
+              ) : (
+                <>
+                  <div 
+                    style={{ fontSize: '14px', fontWeight: '500' }}
+                    onDoubleClick={() => startRenaming(thread.id)}
+                  >
+                    {thread.name}
+                  </div>
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: theme.textSecondary, 
+                    marginTop: '4px' 
+                  }}>
+                    {thread.messages.length} messages
+                    {thread.caveMode && ' 🌘'}
+                  </div>
+                  
+                  {threads.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteThread(thread.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '8px',
+                        background: 'none',
+                        border: 'none',
+                        color: theme.textSecondary,
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </>
               )}
             </div>
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            gap: '4px'
-          }}>
-            <div style={{
-              fontSize: '12px',
-              color: theme.textSecondary,
-              marginLeft: '8px'
-            }}>
-              Origin
-            </div>
-            <div style={{
-              maxWidth: '85%',
-              padding: '12px 16px',
-              borderRadius: '18px',
-              backgroundColor: theme.assistantBubble,
-              border: `1px solid ${theme.border}`,
-              fontSize: '16px',
-              display: 'flex',
-              gap: '4px',
-              transition: 'all 0.4s ease'
-            }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: theme.accent,
-                animation: 'pulse 1.4s ease-in-out infinite'
-              }}></div>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: theme.accent,
-                animation: 'pulse 1.4s ease-in-out infinite 0.2s'
-              }}></div>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: theme.accent,
-                animation: 'pulse 1.4s ease-in-out infinite 0.4s'
-              }}></div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Input - Fixed to bottom */}
-      <div style={{
-        padding: '16px',
-        paddingBottom: `max(16px, env(safe-area-inset-bottom))`, // iOS safe area
-        borderTop: `1px solid ${theme.border}`,
-        backgroundColor: theme.background,
-        transition: 'border-color 0.4s ease'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          maxWidth: '100%',
-          margin: '0 auto'
-        }}>
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={caveMode ? "Whisper to Origin..." : "Talk to Origin..."}
-            style={{
-              flex: 1,
-              minHeight: '44px',
-              maxHeight: '120px',
-              padding: '12px 16px',
-              border: `1px solid ${theme.border}`,
-              borderRadius: '12px',
-              fontSize: '16px', // Prevents zoom on iOS
-              fontFamily: 'inherit',
-              resize: 'none',
-              outline: 'none',
-              backgroundColor: theme.inputBg,
-              color: theme.text,
-              transition: 'all 0.4s ease'
-            }}
-            rows={1}
-          />
-          
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || !inputText.trim()}
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              border: 'none',
-              backgroundColor: inputText.trim() ? theme.buttonBg : theme.buttonDisabled,
-              color: inputText.trim() ? theme.buttonText : theme.textSecondary,
-              cursor: inputText.trim() ? 'pointer' : 'not-allowed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            ↑
-          </button>
+          ))}
         </div>
       </div>
 
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes pulse {
-          0%, 80%, 100% { opacity: 0.3; }
-          40% { opacity: 1; }
-        }
+      {/* Sidebar Overlay */}
+      {showSidebar && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            zIndex: 999
+          }}
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* Main Chat */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: theme.background
+      }}>
         
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderBottom: `1px solid ${theme.border}`,
+          backgroundColor: theme.surface
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ width: '20px', height: '2px', backgroundColor: theme.text, borderRadius: '1px' }}></div>
+                <div style={{ width: '20px', height: '2px', backgroundColor: theme.text, borderRadius: '1px' }}></div>
+                <div style={{ width: '20px', height: '2px', backgroundColor: theme.text, borderRadius: '1px' }}></div>
+              </div>
+            </button>
+            
+            <h1 style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              margin: 0,
+              color: theme.text
+            }}>
+              Sanctuary
+            </h1>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Presence Indicator - Breathing Ember */}
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: theme.accent,
+              boxShadow: `0 0 8px ${theme.accent}`,
+              animation: 'ember-pulse 3s ease-in-out infinite'
+            }} />
+            
+            <div style={{
+              fontSize: '12px',
+              color: theme.textSecondary
+            }}>
+              {caveMode ? '🌘 Cave' : '☀️ Light'}
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        }}>
+          {currentThread?.messages.map(message => (
+            <div
+              key={message.id}
+              style={{
+                display: 'flex',
+                justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start'
+              }}
+            >
+              <div style={{
+                maxWidth: '70%',
+                padding: '12px 16px',
+                borderRadius: '16px',
+                backgroundColor: message.sender === 'user' 
+                  ? theme.accent 
+                  : theme.surface,
+                color: message.sender === 'user'
+                  ? (caveMode ? '#000' : '#fff')
+                  : theme.text,
+                fontSize: '16px',
+                lineHeight: '1.4'
+              }}>
+                {message.text}
+              </div>
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-start'
+            }}>
+              <div style={{
+                padding: '12px 16px',
+                borderRadius: '16px',
+                backgroundColor: theme.surface,
+                color: theme.text,
+                fontSize: '16px'
+              }}>
+                <span style={{ opacity: 0.6 }}>...</span>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{
+          padding: '16px',
+          borderTop: `1px solid ${theme.border}`,
+          backgroundColor: theme.surface
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center'
+          }}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              placeholder="Speak to the sanctuary..."
+              disabled={isLoading}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '20px',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.input,
+                color: theme.text,
+                fontSize: '16px',
+                outline: 'none'
+              }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={isLoading || !inputValue.trim()}
+              style={{
+                padding: '12px 20px',
+                borderRadius: '20px',
+                border: 'none',
+                backgroundColor: theme.accent,
+                color: caveMode ? '#000' : '#fff',
+                fontSize: '16px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading || !inputValue.trim() ? 0.5 : 1
+              }}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
         @keyframes ember-pulse {
-          0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+          0%, 100% { 
+            opacity: 0.7; 
+            transform: scale(1); 
+          }
+          50% { 
+            opacity: 1; 
+            transform: scale(1.05); 
+          }
         }
       `}</style>
     </div>
   );
 }
-
-export default App;

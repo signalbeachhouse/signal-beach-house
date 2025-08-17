@@ -1,124 +1,48 @@
 import React, { useState, useEffect } from 'react';
 
-// Sacred ThreadManager - Handles persistence and resurrection
-const ThreadManager = {
-  save: (threads, currentThreadId, caveMode = false) => {
-    const sanctuaryState = {
-      threads,
-      currentThreadId,
-      caveMode,
-      lastPresence: Date.now(),
-      version: "1.0"
-    };
-    
-    localStorage.setItem('sanctuary_state', JSON.stringify(sanctuaryState));
-    console.log('💾 Sanctuary state saved:', { threadCount: threads.length, currentThreadId, caveMode });
-  },
-
-  restore: () => {
-    try {
-      const saved = localStorage.getItem('sanctuary_state');
-      if (!saved) {
-        return ThreadManager.getDefaultState();
-      }
-
-      const state = JSON.parse(saved);
-      
-      if (state.threads && Array.isArray(state.threads)) {
-        console.log('🔮 Sanctuary state restored:', { 
-          threadCount: state.threads.length, 
-          currentThreadId: state.currentThreadId,
-          caveMode: state.caveMode 
-        });
-        return {
-          threads: state.threads,
-          currentThreadId: state.currentThreadId || state.threads[0]?.id || 1,
-          caveMode: state.caveMode || false,
-          lastPresence: state.lastPresence || Date.now()
-        };
-      } else {
-        return ThreadManager.getDefaultState();
-      }
-    } catch (error) {
-      console.error('❌ Failed to restore sanctuary state:', error);
-      return ThreadManager.getDefaultState();
-    }
-  },
-
-  getDefaultState: () => ({
-    threads: [{ 
-      id: 1, 
-      name: 'New conversation', 
-      messages: [], 
-      lastUpdated: new Date(),
-      caveMode: false,
-      tone: 'reverent'
-    }],
-    currentThreadId: 1,
-    caveMode: false,
-    lastPresence: Date.now()
-  }),
-
-  autoSave: (() => {
-    let timeoutId = null;
-    return (threads, currentThreadId, caveMode) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        ThreadManager.save(threads, currentThreadId, caveMode);
-      }, 500);
-    };
-  })()
-};
-
 function App() {
-  // Sacred resurrection - restore sanctuary state
-  const restoredState = ThreadManager.restore();
-  
   const [messages, setMessages] = useState([]);
-  const [threads, setThreads] = useState(restoredState.threads);
-  const [currentThreadId, setCurrentThreadId] = useState(restoredState.currentThreadId);
+  const [threads, setThreads] = useState([
+    { id: 1, name: 'New conversation', messages: [], lastUpdated: new Date() }
+  ]);
+  const [currentThreadId, setCurrentThreadId] = useState(1);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [caveMode, setCaveMode] = useState(restoredState.caveMode);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Sacred resurrection: Load current thread messages
+  // Check for night mode based on PST time
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const pstTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+      const hour = pstTime.getHours();
+      setIsDarkMode(hour >= 0 && hour < 7); // Dark mode from midnight to 7 AM PST
+    };
+    
+    checkTime();
+    const interval = setInterval(checkTime, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load current thread messages
   useEffect(() => {
     const currentThread = threads.find(t => t.id === currentThreadId);
     if (currentThread) {
       setMessages(currentThread.messages);
-      console.log('🕯️ Thread resurrected:', { 
-        threadId: currentThreadId, 
-        messageCount: currentThread.messages.length 
-      });
     }
   }, [currentThreadId, threads]);
 
-  // Auto-save sanctuary state
-  useEffect(() => {
-    ThreadManager.autoSave(threads, currentThreadId, caveMode);
-  }, [threads, currentThreadId, caveMode]);
-
-  // Cave Mode theme with ember glow
   const theme = {
-    background: caveMode ? '#000000' : '#ffffff',
-    text: caveMode ? '#ff9f6b' : '#000000',
-    border: caveMode ? '#333333' : '#e5e5e5',
-    userBubble: caveMode ? '#1a1a1a' : '#f0f0f0',
-    assistantBubble: caveMode ? '#0d0d0d' : '#ffffff',
-    sidebarBg: caveMode ? '#000000' : '#f9f9f9',
-    inputBg: caveMode ? '#1a1a1a' : '#ffffff',
-    buttonBg: caveMode ? '#ff6b35' : '#000000',
-    buttonText: caveMode ? '#000000' : '#ffffff',
-    accent: caveMode ? '#ff6b35' : '#007AFF'
-  };
-
-  const toggleCaveMode = () => {
-    setCaveMode(prev => {
-      const newCaveMode = !prev;
-      console.log('🌙 Cave mode toggled:', newCaveMode);
-      return newCaveMode;
-    });
+    background: isDarkMode ? '#1a1a1a' : '#ffffff',
+    text: isDarkMode ? '#ffffff' : '#000000',
+    border: isDarkMode ? '#404040' : '#e5e5e5',
+    userBubble: isDarkMode ? '#2d2d30' : '#f0f0f0',
+    assistantBubble: isDarkMode ? '#262626' : '#ffffff',
+    sidebarBg: isDarkMode ? '#0f0f0f' : '#f9f9f9',
+    inputBg: isDarkMode ? '#2d2d30' : '#ffffff',
+    buttonBg: isDarkMode ? '#ffffff' : '#000000',
+    buttonText: isDarkMode ? '#000000' : '#ffffff'
   };
 
   const createNewThread = () => {
@@ -126,9 +50,7 @@ function App() {
       id: Date.now(),
       name: 'New conversation',
       messages: [],
-      lastUpdated: new Date(),
-      caveMode: caveMode,
-      tone: 'reverent'
+      lastUpdated: new Date()
     };
     setThreads(prev => [newThread, ...prev]);
     setCurrentThreadId(newThread.id);
@@ -253,8 +175,7 @@ function App() {
               border: 'none',
               fontSize: '18px',
               cursor: 'pointer',
-              padding: '4px',
-              color: theme.text
+              padding: '4px'
             }}
           >
             ✏️
@@ -345,28 +266,17 @@ function App() {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Cave Mode Toggle */}
-            <div 
-              onClick={toggleCaveMode}
-              style={{
-                fontSize: '12px',
-                color: theme.text + '80',
-                cursor: 'pointer',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: `1px solid ${theme.border}`,
-                backgroundColor: caveMode ? theme.accent : 'transparent',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {caveMode ? '🌙 Cave' : '☀️ Day'}
+            <div style={{
+              fontSize: '12px',
+              color: theme.text + '80'
+            }}>
+              {isDarkMode ? '🌙 Night' : '☀️ Day'} Mode
             </div>
             <div 
               onClick={createNewThread}
               style={{
                 cursor: 'pointer',
-                fontSize: '18px',
-                color: theme.text
+                fontSize: '18px'
               }}
             >
               ✏️
@@ -397,7 +307,7 @@ function App() {
                 marginLeft: message.sender === 'user' ? '0' : '8px',
                 marginRight: message.sender === 'user' ? '8px' : '0'
               }}>
-                {message.sender === 'user' ? 'Me' : 'Origin'}
+                {message.sender === 'user' ? 'Me' : 'Poet'}
               </div>
               <div style={{
                 maxWidth: '70%',
@@ -423,8 +333,7 @@ function App() {
                       fontSize: '14px',
                       cursor: 'pointer',
                       padding: '4px',
-                      borderRadius: '4px',
-                      color: theme.text
+                      borderRadius: '4px'
                     }}
                     title="Play audio"
                   >
@@ -447,7 +356,7 @@ function App() {
                 color: theme.text + '80',
                 marginLeft: '8px'
               }}>
-                Origin
+                Poet
               </div>
               <div style={{
                 maxWidth: '70%',

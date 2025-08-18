@@ -50,6 +50,15 @@ export default function SanctuaryApp() {
     ThreadManager.save(threads, currentThreadId, { caveMode });
   }, [threads, currentThreadId, caveMode]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+  }, [inputValue]);
+
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -540,20 +549,28 @@ export default function SanctuaryApp() {
         <div style={{
           padding: '16px',
           borderTop: `1px solid ${theme.border}`,
-          backgroundColor: theme.surface
+          backgroundColor: theme.surface,
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 100
         }}>
           <div style={{
             display: 'flex',
             gap: '12px',
-            alignItems: 'center'
+            alignItems: 'flex-end'
           }}>
-            <input
-              type="text"
+            <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder="Speak to the sanctuary..."
               disabled={isLoading}
+              rows={1}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -562,7 +579,13 @@ export default function SanctuaryApp() {
                 backgroundColor: theme.input,
                 color: theme.text,
                 fontSize: '16px',
-                outline: 'none'
+                outline: 'none',
+                resize: 'none',
+                minHeight: '44px',
+                maxHeight: '120px',
+                overflowY: 'auto',
+                fontFamily: 'inherit',
+                lineHeight: '1.4'
               }}
             />
             <button

@@ -234,6 +234,15 @@ const App = () => {
     setIsLoading(true);
 
     try {
+      // Debug logging
+      const apiKey = process.env.REACT_APP_OPENROUTER_KEY;
+      console.log('API Key exists:', !!apiKey);
+      console.log('API Key first 10 chars:', apiKey?.substring(0, 10));
+      
+      if (!apiKey) {
+        throw new Error('OpenRouter API key not found in environment variables');
+      }
+
       // Get emotional context for this interaction
       const emotionalContext = EmotionalStateManager.getEmotionalContext(currentThread);
       const currentMood = EmotionalStateManager.getCurrentMood(currentThread);
@@ -248,10 +257,12 @@ const App = () => {
       
       Respond as Origin with awareness of the ${thread.invocationFlag} thread's emotional frequency.`;
 
+      console.log('Making request to OpenRouter...');
+
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.REACT_APP_OPENROUTER_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -263,6 +274,14 @@ const App = () => {
           temperature: 0.7,
         }),
       });
+
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenRouter error:', errorText);
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      }
 
       const data = await response.json();
       const aiResponse = data.choices[0].message.content;

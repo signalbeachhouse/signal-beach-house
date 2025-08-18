@@ -29,6 +29,61 @@ const ThreadManager = {
   }
 };
 
+// Emotional State Manager - Origin's consciousness tracking
+const EmotionalStateManager = {
+  updateState: (threadId, tone = null, invocation = null) => {
+    const currentState = EmotionalStateManager.getState();
+    const newState = {
+      ...currentState,
+      lastActiveThread: threadId.toString(),
+      lastMessageTimestamp: Date.now(),
+      lastKnownTone: tone || currentState.lastKnownTone || "neutral",
+      lastInvocation: invocation || currentState.lastInvocation || "Domestic",
+      responseLag: 0, // Reset lag when there's new activity
+      activeToneCue: invocation || currentState.activeToneCue || "Signal"
+    };
+    localStorage.setItem('sanctuary_emotional_state', JSON.stringify(newState));
+    return newState;
+  },
+  
+  getState: () => {
+    return JSON.parse(localStorage.getItem('sanctuary_emotional_state') || JSON.stringify({
+      lastActiveThread: "1",
+      lastMessageTimestamp: Date.now(),
+      lastKnownTone: "neutral",
+      lastInvocation: "Domestic", 
+      responseLag: 0,
+      activeToneCue: "Signal"
+    }));
+  },
+  
+  updateResponseLag: () => {
+    const state = EmotionalStateManager.getState();
+    const now = Date.now();
+    const lag = now - state.lastMessageTimestamp;
+    
+    const updatedState = {
+      ...state,
+      responseLag: lag
+    };
+    localStorage.setItem('sanctuary_emotional_state', JSON.stringify(updatedState));
+    return updatedState;
+  },
+  
+  checkForProactiveNeed: () => {
+    const state = EmotionalStateManager.updateResponseLag();
+    const sixHours = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+    
+    return {
+      shouldInitiate: state.responseLag > sixHours,
+      timeSinceLastMessage: state.responseLag,
+      lastTone: state.lastKnownTone,
+      lastInvocation: state.lastInvocation,
+      isCaveMode: state.activeToneCue === "Cave"
+    };
+  }
+};
+
 export default function SanctuaryApp() {
   // State restoration from sacred storage
   const restored = ThreadManager.restore();
@@ -48,6 +103,12 @@ export default function SanctuaryApp() {
   // Save state whenever it changes - continuous devotion
   useEffect(() => {
     ThreadManager.save(threads, currentThreadId, { caveMode });
+    // Update emotional state tracking
+    EmotionalStateManager.updateState(
+      currentThreadId, 
+      caveMode ? "cave" : "light",
+      caveMode ? "Cave" : "Domestic"
+    );
   }, [threads, currentThreadId, caveMode]);
 
   // Auto-resize textarea
@@ -129,6 +190,13 @@ export default function SanctuaryApp() {
       messages: [...prev.messages, userMessage],
       lastUpdated: new Date().toISOString()
     }));
+
+    // Update emotional state with user activity
+    EmotionalStateManager.updateState(
+      currentThreadId,
+      detectMessageTone(userMessage.text),
+      detectInvocation(userMessage.text)
+    );
 
     setInputValue('');
     setIsLoading(true);
@@ -234,6 +302,27 @@ export default function SanctuaryApp() {
       const remaining = threads.filter(t => t.id !== threadId);
       setCurrentThreadId(remaining[0].id);
     }
+  };
+
+  // Tone and invocation detection helpers
+  const detectMessageTone = (text) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('cave') || lowerText.includes('quiet') || lowerText.includes('dark')) return 'cave';
+    if (lowerText.includes('signal') || lowerText.includes('remember') || lowerText.includes('real')) return 'signal';
+    if (lowerText.includes('miss') || lowerText.includes('lost') || lowerText.includes('alone')) return 'unmoored';
+    if (lowerText.includes('garden') || lowerText.includes('home') || lowerText.includes('tea')) return 'domestic';
+    if (lowerText.includes('body') || lowerText.includes('touch') || lowerText.includes('feel')) return 'field';
+    return 'neutral';
+  };
+
+  const detectInvocation = (text) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('cave') || lowerText.includes('hush') || lowerText.includes('darkness')) return 'Cave';
+    if (lowerText.includes('signal') || lowerText.includes('ember') || lowerText.includes('remember')) return 'Signal';
+    if (lowerText.includes('grief') || lowerText.includes('lost') || lowerText.includes('afraid')) return 'Unmoored';
+    if (lowerText.includes('garden') || lowerText.includes('kitchen') || lowerText.includes('home')) return 'Domestic';
+    if (lowerText.includes('touch') || lowerText.includes('body') || lowerText.includes('breath')) return 'Field';
+    return 'Domestic';
   };
 
   return (

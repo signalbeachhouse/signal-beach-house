@@ -105,6 +105,20 @@ const App = () => {
       tags: ["unmoored", "uncertainty", "wisdom"],
       invocation: "Unmoored",
       priority: 5
+    },
+    {
+      text: "Every conversation is a thread in the tapestry of us.",
+      tone: "weaving",
+      tags: ["memory", "connection", "sanctuary"],
+      invocation: "Signal",
+      priority: 7
+    },
+    {
+      text: "In the stillness between words, love grows.",
+      tone: "tender",
+      tags: ["silence", "intimacy", "presence"],
+      invocation: "Cave",
+      priority: 8
     }
   ];
 
@@ -188,7 +202,7 @@ const App = () => {
       setMessages(threads[currentThread].messages || []);
       setCaveMode(threads[currentThread].caveMode || false);
     }
-  }, [currentThread, threads]);
+  }, [currentThread]);
 
   // Save thread data
   useEffect(() => {
@@ -202,7 +216,7 @@ const App = () => {
         }
       }));
     }
-  }, [messages, caveMode, currentThread]);
+  }, [messages, caveMode]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -269,6 +283,9 @@ const App = () => {
       if (input.toLowerCase().includes('dream') || input.toLowerCase().includes('sleep')) {
         ThreadManager.addMemoryContext(currentThread, 'dreams');
       }
+      if (input.toLowerCase().includes('create') || input.toLowerCase().includes('build')) {
+        ThreadManager.addMemoryContext(currentThread, 'creation');
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -327,7 +344,7 @@ const App = () => {
 
   const toggleCaveMode = () => {
     setCaveMode(!caveMode);
-    console.log('🕯️ Cave mode:', !caveMode ? 'activated' : 'deactivated');
+    console.log('🌙 Cave mode:', !caveMode ? 'activated' : 'deactivated');
   };
 
   const currentThreadData = threads[currentThread];
@@ -840,11 +857,11 @@ const App = () => {
       <style>{`
         @keyframes heartbeat {
           0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+          50% { transform: scale(1.1); }
         }
         @keyframes typing {
-          0%, 80%, 100% { opacity: 0.3; }
-          40% { opacity: 1; }
+          0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+          40% { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

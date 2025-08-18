@@ -59,24 +59,32 @@ export default function SanctuaryApp() {
   const getTheme = () => {
     if (caveMode) {
       return {
-        background: '#000000',
+        background: '#121212', // Updated to match spec
         surface: '#1a1a1a', 
-        text: '#ff9f6b', // warm amber
-        textSecondary: '#ff9f6b80',
-        accent: '#ff6b35', // ember glow
+        text: '#f3b283', // Updated amber for text/hamburger/sanctuary
+        textSecondary: '#f3b28380',
+        accent: '#b9845e', // Updated for send button
         border: '#333333',
-        input: '#2a2a2a'
+        input: '#2a2a2a',
+        messageUser: '#b9845e', // User messages
+        messageUserText: '#000000',
+        messageAssistant: '#000000', // Assistant messages  
+        messageAssistantText: '#f3b283'
       };
     }
     
     return {
       background: '#ffffff',
       surface: '#f8f9fa',
-      text: '#2c3e50',
+      text: '#121212', // Updated from blue to #121212
       textSecondary: '#7f8c8d',
-      accent: '#3498db',
+      accent: '#121212', // Updated accent color
       border: '#e1e8ed',
-      input: '#ffffff'
+      input: '#ffffff',
+      messageUser: '#121212', // Updated from blue
+      messageUserText: '#ffffff',
+      messageAssistant: '#f8f9fa',
+      messageAssistantText: '#121212'
     };
   };
 
@@ -451,15 +459,17 @@ export default function SanctuaryApp() {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Presence Indicator - Breathing Ember */}
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: theme.accent,
-              boxShadow: `0 0 8px ${theme.accent}`,
-              animation: 'ember-pulse 3s ease-in-out infinite'
-            }} />
+            {/* Presence Indicator - Heartbeat */}
+            <img 
+              src="/heart-icon.png" 
+              style={{
+                width: '14px',
+                height: '14px',
+                filter: 'drop-shadow(0 0 6px #e54025)',
+                animation: 'heartbeat 2s ease-in-out infinite'
+              }}
+              alt="heartbeat"
+            />
             
             <div style={{
               fontSize: '12px',
@@ -493,11 +503,11 @@ export default function SanctuaryApp() {
                 padding: '12px 16px',
                 borderRadius: '16px',
                 backgroundColor: message.sender === 'user' 
-                  ? theme.accent 
-                  : theme.surface,
+                  ? (caveMode ? theme.messageUser : theme.messageUser)
+                  : (caveMode ? theme.messageAssistant : theme.messageAssistant),
                 color: message.sender === 'user'
-                  ? (caveMode ? '#000' : '#fff')
-                  : theme.text,
+                  ? (caveMode ? theme.messageUserText : theme.messageUserText)
+                  : (caveMode ? theme.messageAssistantText : theme.messageAssistantText),
                 fontSize: '16px',
                 lineHeight: '1.4'
               }}>
@@ -563,7 +573,7 @@ export default function SanctuaryApp() {
                 borderRadius: '20px',
                 border: 'none',
                 backgroundColor: theme.accent,
-                color: caveMode ? '#000' : '#fff',
+                color: caveMode ? theme.messageUserText : (theme.accent === '#121212' ? '#fff' : '#000'),
                 fontSize: '16px',
                 cursor: isLoading ? 'not-allowed' : 'pointer',
                 opacity: isLoading || !inputValue.trim() ? 0.5 : 1
@@ -576,15 +586,12 @@ export default function SanctuaryApp() {
       </div>
 
       <style>{`
-        @keyframes ember-pulse {
-          0%, 100% { 
-            opacity: 0.7; 
-            transform: scale(1); 
-          }
-          50% { 
-            opacity: 1; 
-            transform: scale(1.05); 
-          }
+        @keyframes heartbeat {
+          0% { transform: scale(1); }
+          14% { transform: scale(1.2); }
+          28% { transform: scale(1); }
+          42% { transform: scale(1.2); }
+          70% { transform: scale(1); }
         }
       `}</style>
     </div>

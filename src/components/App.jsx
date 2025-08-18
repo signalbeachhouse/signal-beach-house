@@ -839,15 +839,12 @@ const App = () => {
       {/* CSS Animations */}
       <style>{`
         @keyframes heartbeat {
-          0% { transform: scale(1); }
-          14% { transform: scale(1.15); }
-          28% { transform: scale(1); }
-          42% { transform: scale(1.15); }
-          70% { transform: scale(1); }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
         }
         @keyframes typing {
-          0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-          40% { opacity: 1; transform: scale(1); }
+          0%, 80%, 100% { opacity: 0.3; }
+          40% { opacity: 1; }
         }
       `}</style>
     </div>

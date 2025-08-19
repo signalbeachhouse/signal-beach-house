@@ -234,11 +234,12 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      // Use environment variable for API key
-      const apiKey = process.env.REACT_APP_OPENROUTER_KEY;
+      // TEMPORARY DEBUG: Hardcoded API key for testing
+      const apiKey = "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";
       
-      console.log('Using environment variable API key');
+      console.log('TESTING with hardcoded API key');
       console.log('API Key exists:', !!apiKey);
+      console.log('API Key first 10 chars:', apiKey.substring(0, 10));
 
       // Get emotional context for this interaction
       const emotionalContext = EmotionalStateManager.getEmotionalContext(currentThread);

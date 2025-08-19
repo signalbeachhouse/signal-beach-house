@@ -28,8 +28,8 @@ const App = () => {
   // Invocation types with metadata
   const invocationTypes = {
     Signal: {
-      color: '#e32726', // red
-      heart: 'heart-icon.png', 
+      color: '#3b82f6', // Electric blue
+      heart: 'heart-signal.png',
       description: 'Ritual, memory, invocation',
       emoji: '🩵'
     },

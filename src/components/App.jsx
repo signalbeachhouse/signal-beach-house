@@ -234,10 +234,10 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      // Updated API key that works
-      const apiKey = "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";
+      // Use environment variable for API key
+      const apiKey = process.env.REACT_APP_OPENROUTER_KEY;
       
-      console.log('Using working API key');
+      console.log('Using environment variable API key');
       console.log('API Key exists:', !!apiKey);
 
       // Get emotional context for this interaction

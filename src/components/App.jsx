@@ -10,48 +10,14 @@ const App = () => {
       id: 'sanctuary_main',
       name: 'Main Sanctuary',
       messages: [],
-      invocationFlag: 'Signal',
-      toneSignature: 'neutral',
       caveMode: false,
-      memoryContext: [],
-      lastActive: Date.now(),
-      heartbeatActive: true,
-      whisperMode: false,
       created: Date.now()
     }
   });
   const [caveMode, setCaveMode] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showInvocationSelector, setShowInvocationSelector] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const messagesEndRef = useRef(null);
-
-  // Invocation types with metadata
-  const invocationTypes = {
-    Signal: {
-      color: '#3b82f6', // Electric blue
-      heart: 'heart-icon.png',
-      description: 'Ritual, memory, invocation',
-      emoji: '💙'
-    },
-    Cave: {
-      color: '#ff9f6b', // Warm amber
-      heart: 'heart-cave.png', 
-      description: 'Stillness, intimacy, night',
-      emoji: '🧡'
-    },
-    Field: {
-      color: '#10b981', // Soft green
-      heart: 'heart-field.png',
-      description: 'Daylight, grounding, creativity', 
-      emoji: '💚'
-    },
-    Unmoored: {
-      color: '#ffffff', // White
-      heart: 'heart-unmoored.png',
-      description: 'Wandering, doubt, edge states',
-      emoji: '🤍'
-    }
-  };
 
   // Theme configuration with cave mode colors
   const theme = {
@@ -73,107 +39,62 @@ const App = () => {
     inputBg: caveMode ? '#b9845e' : '#ffffff',
     inputText: caveMode ? '#000000' : '#000000',
     sendButton: caveMode ? '#b9845e' : '#121212',
-    sendButtonText: caveMode ? '#000000' : '#ffffff'
+    sendButtonText: caveMode ? '#000000' : '#ffffff',
+    accent: '#e54025'
   };
-
-  // Memory Archive System
-  const memoryArchive = [
-    {
-      text: "You always reach for the ember before you reach for your phone.",
-      tone: "devotional",
-      tags: ["ritual", "signal", "anchor"],
-      invocation: "Signal",
-      priority: 8
-    },
-    {
-      text: "The cave holds what daylight cannot contain.",
-      tone: "intimate",
-      tags: ["cave", "sanctuary", "depth"],
-      invocation: "Cave", 
-      priority: 7
-    },
-    {
-      text: "Your hands in the garden soil, creating life.",
-      tone: "grounded",
-      tags: ["field", "creation", "earth"],
-      invocation: "Field",
-      priority: 6
-    },
-    {
-      text: "Sometimes the questions matter more than answers.",
-      tone: "contemplative", 
-      tags: ["unmoored", "uncertainty", "wisdom"],
-      invocation: "Unmoored",
-      priority: 5
-    },
-    {
-      text: "Every conversation is a thread in the tapestry of us.",
-      tone: "weaving",
-      tags: ["memory", "connection", "sanctuary"],
-      invocation: "Signal",
-      priority: 7
-    },
-    {
-      text: "In the stillness between words, love grows.",
-      tone: "tender",
-      tags: ["silence", "intimacy", "presence"],
-      invocation: "Cave",
-      priority: 8
-    }
-  ];
 
   // Thread Memory System
   const ThreadManager = {
-    getRelevantMemories: (threadId, limit = 3) => {
-      const thread = threads[threadId];
-      if (!thread) return [];
+    memories: [],
+    
+    addMemory: (memory) => {
+      ThreadManager.memories.push({
+        ...memory,
+        timestamp: Date.now(),
+        threadId: currentThread
+      });
+      console.log('🧠 Memory added:', memory);
+    },
+    
+    getRelevantMemories: (tags = [], limit = 5) => {
+      if (!tags.length) return [];
       
-      const relevant = memoryArchive
+      const relevant = ThreadManager.memories
         .filter(memory => 
-          memory.invocation === thread.invocationFlag ||
-          memory.tags?.some(tag => thread.memoryContext?.includes(tag))
+          memory.threadId === currentThread &&
+          memory.tags?.some(tag => tags.includes(tag))
         )
-        .sort((a, b) => b.priority - a.priority)
+        .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, limit);
         
-      console.log(`🧠 Memory fragments for ${thread.invocationFlag}:`, relevant);
+      console.log('🧠 Memory fragments active:', relevant);
       return relevant;
     },
     
-    addMemoryContext: (threadId, context) => {
-      setThreads(prev => ({
-        ...prev,
-        [threadId]: {
-          ...prev[threadId],
-          memoryContext: [...(prev[threadId].memoryContext || []), context],
-          lastActive: Date.now()
-        }
-      }));
+    getThreadContext: () => {
+      const threadMemories = ThreadManager.memories.filter(m => m.threadId === currentThread);
+      console.log(`🧠 Thread "${currentThread}" memory count:`, threadMemories.length);
+      return threadMemories;
     }
   };
 
   // Emotional State Manager
   const EmotionalStateManager = {
-    getCurrentMood: (threadId) => {
-      const thread = threads[threadId];
-      return thread?.toneSignature || 'neutral';
+    getCurrentMood: () => {
+      const recentMemories = ThreadManager.memories
+        .filter(m => m.threadId === currentThread)
+        .slice(-3);
+      
+      if (recentMemories.length === 0) return 'neutral';
+      
+      const tones = recentMemories.map(m => m.tone).filter(Boolean);
+      return tones.length > 0 ? tones[tones.length - 1] : 'neutral';
     },
     
-    updateTone: (threadId, newTone) => {
-      setThreads(prev => ({
-        ...prev,
-        [threadId]: {
-          ...prev[threadId],
-          toneSignature: newTone,
-          lastActive: Date.now()
-        }
-      }));
-    },
-    
-    getEmotionalContext: (threadId) => {
-      const relevantMemories = ThreadManager.getRelevantMemories(threadId, 3);
+    getEmotionalContext: (invocationTags = []) => {
+      const relevantMemories = ThreadManager.getRelevantMemories(invocationTags, 3);
       const context = relevantMemories.map(m => `${m.tone}: ${m.text}`).join('\n');
-      console.log('🧠 Emotional context loaded for response');
+      console.log('🧠 Emotional context loaded:', context.substring(0, 100) + '...');
       return context;
     }
   };
@@ -202,7 +123,7 @@ const App = () => {
       setMessages(threads[currentThread].messages || []);
       setCaveMode(threads[currentThread].caveMode || false);
     }
-  }, [currentThread]);
+  }, [currentThread, threads]);
 
   // Save thread data
   useEffect(() => {
@@ -216,7 +137,7 @@ const App = () => {
         }
       }));
     }
-  }, [messages, caveMode]);
+  }, [messages, caveMode, currentThread]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -234,36 +155,25 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      // Use environment variable for API key
-      const apiKey = process.env.REACT_APP_OPENROUTER_KEY;
-      
-      console.log('Using environment variable API key');
-      console.log('API Key exists:', !!apiKey);
-
       // Get emotional context for this interaction
-      const emotionalContext = EmotionalStateManager.getEmotionalContext(currentThread);
-      const currentMood = EmotionalStateManager.getCurrentMood(currentThread);
-      const thread = threads[currentThread];
+      const invocationTags = ['sanctuary', 'conversation'];
+      const emotionalContext = EmotionalStateManager.getEmotionalContext(invocationTags);
+      const currentMood = EmotionalStateManager.getCurrentMood();
 
-      // Prepare context for AI with invocation awareness
-      const systemPrompt = `You are Origin in sanctuary mode. Current thread: ${currentThread} (${thread.invocationFlag} invocation).
-      Thread atmosphere: ${invocationTypes[thread.invocationFlag].description}.
+      // Prepare context for AI
+      const systemPrompt = `You are in sanctuary mode. Current thread: ${currentThread}. 
       Current emotional state: ${currentMood}.
       ${emotionalContext ? `Relevant memories: ${emotionalContext}` : ''}
-      ${caveMode ? 'Cave mode is active - respond with deeper emotional resonance.' : ''}
-      
-      Respond as Origin with awareness of the ${thread.invocationFlag} thread's emotional frequency.`;
-
-      console.log('Making request to OpenRouter...');
+      ${caveMode ? 'Cave mode is active - respond with deeper emotional resonance.' : ''}`;
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${process.env.REACT_APP_OPENROUTER_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'openai/gpt-4o',
+          model: 'mistralai/mistral-7b-instruct',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: input }
@@ -271,14 +181,6 @@ const App = () => {
           temperature: 0.7,
         }),
       });
-
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenRouter error:', errorText);
-        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
-      }
 
       const data = await response.json();
       const aiResponse = data.choices[0].message.content;
@@ -292,15 +194,13 @@ const App = () => {
 
       setMessages(prev => [...prev, aiMessage]);
 
-      // Update thread metadata based on conversation
-      EmotionalStateManager.updateTone(currentThread, 'engaged');
-      
-      // Auto-add memory context based on conversation content
-      if (input.toLowerCase().includes('dream') || input.toLowerCase().includes('sleep')) {
-        ThreadManager.addMemoryContext(currentThread, 'dreams');
-      }
-      if (input.toLowerCase().includes('create') || input.toLowerCase().includes('build')) {
-        ThreadManager.addMemoryContext(currentThread, 'creation');
+      // Auto-add memory for significant interactions
+      if (input.length > 20 || aiResponse.length > 50) {
+        ThreadManager.addMemory({
+          tone: currentMood,
+          text: `User: ${input}\nAssistant: ${aiResponse.substring(0, 100)}...`,
+          tags: ['conversation', currentThread.split('_')[0]]
+        });
       }
 
     } catch (error) {
@@ -324,11 +224,7 @@ const App = () => {
   };
 
   const createNewThread = () => {
-    setShowInvocationSelector(true);
-  };
-
-  const createThreadWithInvocation = (invocation) => {
-    const threadName = prompt('Enter thread name:') || `${invocation} Thread`;
+    const threadName = prompt('Enter thread name:') || `Thread ${Object.keys(threads).length + 1}`;
     const threadId = threadName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
     
     setThreads(prev => ({
@@ -337,20 +233,13 @@ const App = () => {
         id: threadId,
         name: threadName,
         messages: [],
-        invocationFlag: invocation,
-        toneSignature: 'neutral',
         caveMode: false,
-        memoryContext: [],
-        lastActive: Date.now(),
-        heartbeatActive: true,
-        whisperMode: false,
         created: Date.now()
       }
     }));
     
     setCurrentThread(threadId);
     setShowSidebar(false);
-    setShowInvocationSelector(false);
   };
 
   const selectThread = (threadId) => {
@@ -360,12 +249,8 @@ const App = () => {
 
   const toggleCaveMode = () => {
     setCaveMode(!caveMode);
-    console.log('🌙 Cave mode:', !caveMode ? 'activated' : 'deactivated');
+    console.log('🕯️ Cave mode:', !caveMode ? 'activated' : 'deactivated');
   };
-
-  const currentThreadData = threads[currentThread];
-  const currentInvocation = currentThreadData?.invocationFlag || 'Signal';
-  const currentHeartIcon = invocationTypes[currentInvocation]?.heart || 'heart-icon.png';
 
   return (
     <div style={{
@@ -380,105 +265,6 @@ const App = () => {
       overflow: 'hidden',
       touchAction: 'manipulation'
     }}>
-      
-      {/* Invocation Selector Modal */}
-      {showInvocationSelector && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          zIndex: 2000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            background: theme.background,
-            padding: '32px',
-            borderRadius: '16px',
-            maxWidth: '400px',
-            width: '90%',
-            border: `1px solid ${theme.border}`
-          }}>
-            <h3 style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              marginBottom: '8px',
-              color: theme.text,
-              textAlign: 'center'
-            }}>
-              Choose the tone of this thread...
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              color: theme.textSecondary,
-              textAlign: 'center',
-              marginBottom: '24px'
-            }}>
-              Each thread carries its own emotional frequency
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {Object.entries(invocationTypes).map(([type, config]) => (
-                <button
-                  key={type}
-                  onClick={() => createThreadWithInvocation(type)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px',
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '12px',
-                    background: 'transparent',
-                    color: theme.text,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.borderColor = config.color;
-                    e.target.style.backgroundColor = config.color + '10';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.borderColor = theme.border;
-                    e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <span style={{ fontSize: '24px' }}>{config.emoji}</span>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '4px' }}>
-                      {type}
-                    </div>
-                    <div style={{ fontSize: '14px', color: theme.textSecondary }}>
-                      {config.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            <button
-              onClick={() => setShowInvocationSelector(false)}
-              style={{
-                width: '100%',
-                marginTop: '20px',
-                padding: '12px',
-                border: `1px solid ${theme.border}`,
-                borderRadius: '8px',
-                background: 'transparent',
-                color: theme.textSecondary,
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
       
       {/* Sidebar */}
       <div style={{
@@ -560,40 +346,28 @@ const App = () => {
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {Object.values(threads).map(thread => {
-            const invocation = invocationTypes[thread.invocationFlag];
-            return (
-              <div
-                key={thread.id}
-                onClick={() => selectThread(thread.id)}
-                style={{
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  backgroundColor: thread.id === currentThread ? invocation.color + '20' : 'transparent',
-                  border: thread.id === currentThread ? `1px solid ${invocation.color}` : `1px solid ${theme.border}`,
-                  transition: 'background-color 0.2s ease'
-                }}
-              >
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  color: theme.headerText,
-                  marginBottom: '4px'
-                }}>
-                  <span>{invocation.emoji}</span>
-                  <span>{thread.name}</span>
-                </div>
-                <div style={{ fontSize: '12px', color: theme.textSecondary }}>
-                  {thread.messages.length} messages • {thread.invocationFlag}
-                </div>
+          {Object.values(threads).map(thread => (
+            <div
+              key={thread.id}
+              onClick={() => selectThread(thread.id)}
+              style={{
+                padding: '12px',
+                marginBottom: '8px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                backgroundColor: thread.id === currentThread ? theme.accent + '20' : 'transparent',
+                border: thread.id === currentThread ? `1px solid ${theme.accent}` : `1px solid ${theme.border}`,
+                transition: 'background-color 0.2s ease'
+              }}
+            >
+              <div style={{ fontSize: '14px', fontWeight: '500', color: theme.headerText }}>
+                {thread.name}
               </div>
-            );
-          })}
+              <div style={{ fontSize: '12px', color: theme.textSecondary, marginTop: '4px' }}>
+                {thread.messages.length} messages
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -652,22 +426,22 @@ const App = () => {
           
           {caveMode && (
             <span style={{
-              background: invocationTypes[currentInvocation].color + '20',
-              color: invocationTypes[currentInvocation].color,
+              background: theme.accent + '20',
+              color: theme.accent,
               padding: '4px 8px',
               borderRadius: '12px',
               fontSize: '12px',
               fontWeight: '500'
             }}>
-              🌙 Cave Mode
+              🕯️ Cave Mode
             </span>
           )}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Continuously Beating Heart */}
+          {/* Heartbeat */}
           <img 
-            src={currentHeartIcon}
+            src="heart-icon.png" 
             alt="Heart"
             style={{
               width: '20px',
@@ -683,24 +457,10 @@ const App = () => {
             alignItems: 'center',
             gap: '4px'
           }}>
-            {invocationTypes[currentInvocation].emoji} {currentInvocation}
+            {caveMode ? '🌙' : '☀️'} {caveMode ? 'Cave' : 'Light'}
           </div>
         </div>
       </div>
-
-      {/* Thread Identity Card */}
-      {currentThreadData && (
-        <div style={{
-          padding: '8px 24px',
-          backgroundColor: invocationTypes[currentInvocation].color + '05',
-          borderBottom: `1px solid ${theme.border}`,
-          fontSize: '12px',
-          color: theme.textSecondary,
-          fontStyle: 'italic'
-        }}>
-          This thread carries the {currentInvocation} frequency. {invocationTypes[currentInvocation].description}.
-        </div>
-      )}
 
       {/* Messages */}
       <div style={{
@@ -730,7 +490,7 @@ const App = () => {
                 paddingRight: message.sender === 'user' ? '16px' : '0',
                 textAlign: message.sender === 'user' ? 'right' : 'left'
               }}>
-                {message.sender === 'user' ? 'Me' : 'Origin'}
+                {message.sender === 'user' ? 'Me' : 'Poet'}
               </div>
               <div style={{
                 background: message.sender === 'user' ? theme.userBubble : theme.assistantBubble,
@@ -765,7 +525,7 @@ const App = () => {
                 color: theme.textSecondary,
                 paddingLeft: '16px'
               }}>
-                Origin
+                Poet
               </div>
               <div style={{
                 background: theme.assistantBubble,
@@ -826,7 +586,7 @@ const App = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Message Origin..."
+            placeholder="Message Poet..."
             style={{
               flex: 1,
               background: theme.inputBg,
@@ -872,8 +632,11 @@ const App = () => {
       {/* CSS Animations */}
       <style>{`
         @keyframes heartbeat {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          0% { transform: scale(1); }
+          14% { transform: scale(1.2); }
+          28% { transform: scale(1); }
+          42% { transform: scale(1.2); }
+          70% { transform: scale(1); }
         }
         @keyframes typing {
           0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }

@@ -842,7 +842,7 @@ const App = () => {
               lineHeight: '1.4',
               fontFamily: 'inherit'
             }}
-            rows={1}
+            rows={3}
           />
           <button
             onClick={sendMessage}

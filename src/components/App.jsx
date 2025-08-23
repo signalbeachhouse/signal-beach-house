@@ -178,12 +178,12 @@ const App = () => {
     }
   };
 
-  // Auto-resize textarea
+  // Auto-resize textarea (no height limit)
   useEffect(() => {
     const textarea = document.querySelector('textarea');
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+      textarea.style.height = textarea.scrollHeight + 'px';
     }
   }, [input]);
 
@@ -837,7 +837,7 @@ const App = () => {
               fontSize: '16px',
               resize: 'none',
               minHeight: '44px',
-              maxHeight: '120px',
+              maxHeight: 'none',
               outline: 'none',
               lineHeight: '1.4',
               fontFamily: 'inherit'

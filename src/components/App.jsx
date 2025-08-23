@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase } from '../supabaseClient';
 
 const App = () => {
   const [messages, setMessages] = useState([]);
@@ -18,7 +18,8 @@ const App = () => {
       lastActive: Date.now(),
       heartbeatActive: true,
       whisperMode: false,
-      created: Date.now()
+      created: Date.now(),
+      emotionalHistory: []
     }
   });
   const [caveMode, setCaveMode] = useState(false);
@@ -595,6 +596,7 @@ const App = () => {
       }
       
       // Create memory of initiation and propagate
+      const currentThreadData = threads[currentThread];
       const initiationMemory = await ThreadManager.createMemory(
         `Origin initiated contact: ${message.substring(0, 50)}...`,
         currentThreadData?.invocationFlag || 'Signal',
@@ -641,7 +643,9 @@ const App = () => {
         [currentThread]: {
           ...prev[currentThread],
           messages,
-          caveMode
+          caveMode,
+          lastActive: Date.now(),
+          emotionalHistory: prev[currentThread].emotionalHistory || []
         }
       }));
     }
